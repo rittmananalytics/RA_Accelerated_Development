@@ -2,7 +2,7 @@
 # Individual course offerings (course + academic year instance)
 
 view: dim_offering {
-  sql_table_name: `analytics.dim_offering` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_offering` ;;
   drill_fields: [offering_code, offering_name, academic_year_id]
 
   # Primary Key

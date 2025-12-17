@@ -3,7 +3,7 @@
 # Grain: One row per subject per report type per academic year
 
 view: fct_subject_benchmark {
-  sql_table_name: `analytics.fct_subject_benchmark` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.fct_subject_benchmark` ;;
   drill_fields: [six_dimensions_subject_name, qualification_type, report_type, performance_band]
 
   # Primary Key

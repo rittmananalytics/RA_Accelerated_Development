@@ -3,7 +3,7 @@
 # Grain: One row per student per academic year
 
 view: dim_student_detail {
-  sql_table_name: `analytics.dim_student_detail` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_student_detail` ;;
   drill_fields: [full_name, gender, ethnicity, prior_attainment_band]
 
   # Primary Key

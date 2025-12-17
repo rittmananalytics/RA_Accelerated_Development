@@ -2,7 +2,7 @@
 # Student master data with demographics
 
 view: dim_student {
-  sql_table_name: `analytics.dim_student` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_student` ;;
   drill_fields: [student_id, full_name, gender, ethnicity]
 
   # Primary Key

@@ -2,7 +2,7 @@
 # Grade reference data for all grading scales (A-Level, BTEC)
 
 view: dim_grade {
-  sql_table_name: `analytics.dim_grade` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_grade` ;;
   drill_fields: [grade, grading_scale, ucas_points]
 
   # Primary Key

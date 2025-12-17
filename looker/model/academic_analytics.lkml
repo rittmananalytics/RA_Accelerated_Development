@@ -1,24 +1,14 @@
-# Barton Peveril Sixth Form College - Looker Model
-# Data Warehouse Analytics Model
-#
-# This model provides explores for:
-# - Course Performance Analysis
-# - Equity & Diversity (JEDI) Analysis
-# - ALPS Benchmarking
-# - Value-Added Analysis
-# - Subject Benchmarking
-
 connection: "ra_dw_prod"
 
 # Include all view files
-include: "/views/*.view.lkml"
+include: "/views/rp/*.view.lkml"
 
 # =====================================================================
 # DATA GROUPS - For caching and scheduling
 # =====================================================================
 
 datagroup: daily_refresh {
-  sql_trigger: SELECT MAX(loaded_at) FROM `analytics.fct_enrolment` ;;
+  sql_trigger: SELECT MAX(loaded_at) FROM `ra-warehouse-dev.analytics.fct_enrolment` ;;
   max_cache_age: "24 hours"
 }
 

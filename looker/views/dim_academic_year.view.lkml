@@ -2,7 +2,7 @@
 # Supports 6-year trend analysis with current/prior year indicators
 
 view: dim_academic_year {
-  sql_table_name: `analytics.dim_academic_year` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_academic_year` ;;
   drill_fields: [academic_year_id, academic_year_name]
 
   # Primary Key

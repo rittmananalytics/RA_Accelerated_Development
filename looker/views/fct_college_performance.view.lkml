@@ -3,7 +3,7 @@
 # Grain: One row per report type per academic year
 
 view: fct_college_performance {
-  sql_table_name: `analytics.fct_college_performance` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.fct_college_performance` ;;
   drill_fields: [report_type, report_name]
 
   # Primary Key

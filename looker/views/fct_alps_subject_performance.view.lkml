@@ -3,7 +3,7 @@
 # Grain: One row per subject per academic year
 
 view: fct_alps_subject_performance {
-  sql_table_name: `analytics.fct_alps_subject_performance` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.fct_alps_subject_performance` ;;
   drill_fields: [alps_subject_name, alps_qualification_type, alps_band, national_benchmark_grade]
 
   # Primary Key

@@ -3,7 +3,7 @@
 # Grain: One row per demographic comparison per academic year
 
 view: fct_equity_gap {
-  sql_table_name: `analytics.fct_equity_gap` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.fct_equity_gap` ;;
   drill_fields: [dimension_name, student_group, comparison_group, gap_grade_points_dim, gap_trend]
 
   # Primary Key

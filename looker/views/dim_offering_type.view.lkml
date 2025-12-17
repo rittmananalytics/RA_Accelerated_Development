@@ -2,7 +2,7 @@
 # Types of educational offerings (A-Level, BTEC, etc.)
 
 view: dim_offering_type {
-  sql_table_name: `analytics.dim_offering_type` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_offering_type` ;;
   drill_fields: [offering_type_name, offering_type_category]
 
   # Primary Key

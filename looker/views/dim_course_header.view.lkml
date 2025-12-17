@@ -2,7 +2,7 @@
 # Course/programme master data
 
 view: dim_course_header {
-  sql_table_name: `analytics.dim_course_header` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_course_header` ;;
   drill_fields: [course_code, course_name, subject_area, department]
 
   # Primary Key

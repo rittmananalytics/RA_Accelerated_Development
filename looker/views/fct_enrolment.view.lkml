@@ -3,7 +3,7 @@
 # Grain: One row per student per offering (student-enrolment)
 
 view: fct_enrolment {
-  sql_table_name: `analytics.fct_enrolment` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.fct_enrolment` ;;
   drill_fields: [detail*]
 
   set: detail {

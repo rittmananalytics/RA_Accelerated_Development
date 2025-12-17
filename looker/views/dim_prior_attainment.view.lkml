@@ -2,7 +2,7 @@
 # GCSE scores and prior attainment banding for value-added analysis
 
 view: dim_prior_attainment {
-  sql_table_name: `analytics.dim_prior_attainment` ;;
+  sql_table_name: `ra-warehouse-dev.analytics.dim_prior_attainment` ;;
   drill_fields: [student_id, average_gcse_score, prior_attainment_band]
 
   # Primary Key
