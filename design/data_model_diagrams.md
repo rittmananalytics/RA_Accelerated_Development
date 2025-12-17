@@ -575,7 +575,7 @@ A logical entity relationship diagram showing the dimensional model with fact an
 erDiagram
     ACADEMIC_YEAR {
         string academic_year_key PK "Surrogate key"
-        string academic_year_id NK "Natural key"
+        string academic_year_id "Natural key"
         string academic_year_name "Display name"
         date academic_year_start_date "Sept 1 start"
         date academic_year_end_date "Aug 31 end"
@@ -587,7 +587,7 @@ erDiagram
 
     OFFERING_TYPE {
         string offering_type_key PK "Surrogate key"
-        string offering_type_id NK "Natural key"
+        string offering_type_id "Natural key"
         string offering_type_name "Type name"
         string offering_type_category "Academic or Vocational"
         string qualification_level "Level 3"
@@ -598,7 +598,7 @@ erDiagram
 
     COURSE_HEADER {
         string course_header_key PK "Surrogate key"
-        string course_header_id NK "Natural key"
+        string course_header_id "Natural key"
         string course_code "Course code"
         string course_name "Course name"
         string subject_area "Subject grouping"
@@ -608,7 +608,7 @@ erDiagram
 
     OFFERING {
         string offering_key PK "Surrogate key"
-        string offering_id NK "Natural key"
+        string offering_id "Natural key"
         string academic_year_id FK "Year context"
         string offering_type_id FK "Type reference"
         string course_header_id FK "Course reference"
@@ -625,7 +625,7 @@ erDiagram
 
     STUDENT {
         string student_key PK "Surrogate key"
-        string student_id NK "Natural key"
+        string student_id "Natural key"
         string uln "Unique Learner Number"
         string first_name "First name"
         string last_name "Last name"
@@ -642,7 +642,7 @@ erDiagram
 
     STUDENT_DETAIL {
         string student_detail_key PK "Surrogate key"
-        string student_detail_id NK "Natural key"
+        string student_detail_id "Natural key"
         string student_id FK "Student reference"
         string academic_year_id FK "Year context"
         string full_name "Full name"
@@ -666,7 +666,7 @@ erDiagram
 
     PRIOR_ATTAINMENT {
         string prior_attainment_key PK "Surrogate key"
-        string average_gcse_id NK "Natural key"
+        string average_gcse_id "Natural key"
         string student_id FK "Student reference"
         string academic_year_id FK "Year context"
         decimal average_gcse_score "Mean GCSE score"
@@ -681,8 +681,8 @@ erDiagram
 
     GRADE {
         string grade_key PK "Surrogate key"
-        string grade NK "Grade value"
-        string grading_scale NK "Grading scale"
+        string grade "Grade value"
+        string grading_scale "Grading scale"
         integer ucas_points "UCAS points"
         integer grade_points "Internal points"
         integer grade_sort_order "Sort order"
@@ -824,7 +824,7 @@ A physical data model for Google BigQuery showing tables, columns, data types, p
 erDiagram
     dim_academic_year {
         INT64 academic_year_key PK "NOT NULL - Surrogate PK"
-        STRING academic_year_id UK "NOT NULL - Natural Key"
+        STRING academic_year_id "NOT NULL - Natural Key"
         STRING academic_year_name "Nullable"
         DATE academic_year_start_date "Nullable"
         DATE academic_year_end_date "Nullable"
@@ -838,7 +838,7 @@ erDiagram
 
     dim_offering_type {
         INT64 offering_type_key PK "NOT NULL - Surrogate PK"
-        INT64 offering_type_id UK "NOT NULL - Natural Key"
+        INT64 offering_type_id "NOT NULL - Natural Key"
         STRING offering_type_name "Nullable"
         STRING offering_type_category "Nullable"
         STRING qualification_level "Nullable"
@@ -851,7 +851,7 @@ erDiagram
 
     dim_course_header {
         INT64 course_header_key PK "NOT NULL - Surrogate PK"
-        INT64 course_header_id UK "NOT NULL - Natural Key"
+        INT64 course_header_id "NOT NULL - Natural Key"
         STRING course_code "Nullable"
         STRING course_name "Nullable"
         STRING subject_area "Nullable"
@@ -863,7 +863,7 @@ erDiagram
 
     dim_offering {
         INT64 offering_key PK "NOT NULL - Surrogate PK"
-        INT64 offering_id UK "NOT NULL - Natural Key"
+        INT64 offering_id "NOT NULL - Natural Key"
         STRING offering_code "Nullable"
         STRING offering_name "Nullable"
         STRING qualification_id "Nullable"
@@ -882,7 +882,7 @@ erDiagram
 
     dim_student {
         INT64 student_key PK "NOT NULL - Surrogate PK"
-        INT64 student_id UK "NOT NULL - Natural Key"
+        INT64 student_id "NOT NULL - Natural Key"
         STRING uln "Nullable"
         STRING first_name "Nullable"
         STRING last_name "Nullable"
@@ -901,7 +901,7 @@ erDiagram
 
     dim_student_detail {
         INT64 student_detail_key PK "NOT NULL - Surrogate PK"
-        INT64 student_detail_id UK "NOT NULL - Natural Key"
+        INT64 student_detail_id "NOT NULL - Natural Key"
         INT64 student_id FK "Nullable - FK to dim_student"
         STRING academic_year_id FK "Nullable - FK to dim_academic_year"
         STRING full_name "Nullable"
@@ -931,7 +931,7 @@ erDiagram
 
     dim_prior_attainment {
         INT64 prior_attainment_key PK "NOT NULL - Surrogate PK"
-        INT64 average_gcse_id UK "NOT NULL - Natural Key"
+        INT64 average_gcse_id "NOT NULL - Natural Key"
         INT64 student_id FK "NOT NULL - FK to dim_student"
         STRING academic_year_id FK "Nullable - FK to dim_academic_year"
         NUMERIC average_gcse_score "Nullable"
@@ -948,8 +948,8 @@ erDiagram
 
     dim_grade {
         INT64 grade_key PK "NOT NULL - Surrogate PK"
-        STRING grade UK "NOT NULL - Composite NK"
-        STRING grading_scale UK "NOT NULL - Composite NK"
+        STRING grade "NOT NULL - Composite Key"
+        STRING grading_scale "NOT NULL - Composite Key"
         INT64 ucas_points "Nullable"
         INT64 grade_points "Nullable"
         INT64 grade_sort_order "Nullable"
