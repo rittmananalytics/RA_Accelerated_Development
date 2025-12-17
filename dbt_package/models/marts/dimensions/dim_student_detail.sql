@@ -27,27 +27,38 @@ final as (
         student_id,
         academic_year_id,
 
-        -- Demographic flags for equity analysis (JEDI)
-        is_disadvantaged,
-        is_pupil_premium,
-        is_free_school_meals,
-        is_sen,
-        is_access_plus,
-        has_additional_adjustments,
-        is_bursary_recipient,
+        -- Core demographics
+        full_name,
+        gender,
+        ethnicity,
 
-        -- Ethnicity
-        ethnicity_code,
-        ethnicity_description,
-        ethnicity_group,
+        -- Demographic flags for equity analysis
+        is_free_meals,
+        is_bursary,
+        is_lac,
+        is_send,
+        is_high_needs,
+        is_young_carer,
 
-        -- SEND
-        sen_type as send_category,
-        cast(null as string) as send_type,
+        -- SEND details
+        primary_send_type,
+        secondary_send_type,
 
         -- Geographic
         postcode_area,
-        cast(null as int64) as imd_decile,  -- Would need to be enriched from external data
+        imd_decile,
+        polar4_quintile,
+        tundra_classification,
+
+        -- Background
+        nationality,
+        country_of_birth,
+        first_language,
+        religion,
+
+        -- Prior attainment
+        average_gcse_score,
+        prior_attainment_band,
 
         -- Metadata
         record_source,

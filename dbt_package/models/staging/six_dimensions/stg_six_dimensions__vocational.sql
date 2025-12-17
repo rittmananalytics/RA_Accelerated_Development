@@ -15,42 +15,38 @@ cleaned as (
 
     select
         -- Keys
-        report_year                                     as academic_year_id,
-        trim(dataset_name)                              as dataset_name,
-        trim(level)                                     as level,
+        vocational_report_id,
+        academic_year                                   as academic_year_id,
         trim(subject_name)                              as subject_name,
         trim(qualification_type)                        as qualification_type,
         trim(qualification_size)                        as qualification_size,
 
         -- Cohort
-        safe_cast(cohort_size as int64)                 as cohort_count,
+        safe_cast(student_count as int64)               as cohort_count,
+        safe_cast(average_gcse_on_entry as numeric)     as average_gcse_on_entry,
+
+        -- Performance metrics
+        safe_cast(completion_rate_pct as numeric)       as completion_rate_pct,
+        safe_cast(achievement_rate_pct as numeric)      as achievement_rate_pct,
+        safe_cast(pass_rate_pct as numeric)             as pass_rate_pct,
 
         -- Grade distribution (BTEC-style)
-        {{ safe_cast_percentage('pct_distinction_star') }} as distinction_star_pct,
-        {{ safe_cast_percentage('pct_distinction') }}   as distinction_pct,
-        {{ safe_cast_percentage('pct_merit') }}         as merit_pct,
-        {{ safe_cast_percentage('pct_pass') }}          as pass_pct,
+        safe_cast(distinction_star_pct as numeric)      as distinction_star_pct,
+        safe_cast(distinction_pct as numeric)           as distinction_pct,
+        safe_cast(merit_pct as numeric)                 as merit_pct,
+        safe_cast(pass_pct as numeric)                  as pass_pct,
+        safe_cast(near_pass_pct as numeric)             as near_pass_pct,
+        safe_cast(fail_pct as numeric)                  as fail_pct,
 
-        -- Attainment metrics
-        {{ safe_cast_percentage('pass_rate') }}         as pass_rate_pct,
-        {{ safe_cast_percentage('high_grade_rate') }}   as high_grade_rate_pct,
-        safe_cast(avg_points as numeric)                as average_points,
+        -- National benchmarks
+        safe_cast(national_achievement_pct as numeric)  as national_achievement_pct,
+        safe_cast(national_distinction_plus_pct as numeric) as national_distinction_plus_pct,
 
-        -- Value-added
-        safe_cast(va_score as numeric)                  as va_score,
-        trim(va_band)                                   as va_band,
-
-        -- National comparison
-        {{ safe_cast_percentage('national_pass_rate') }} as national_pass_rate_pct,
-        {{ safe_cast_percentage('national_high_grade') }} as national_high_grade_pct,
-        {{ safe_cast_percentage('percentile_rank') }}   as percentile_rank,
+        -- Performance band
+        performance_band,
 
         -- Source metadata
-        report_filename,
-        report_type,
-        dataset_index,
         report_date,
-        parsed_at,
 
         -- Metadata
         'six_dimensions'                                as record_source,

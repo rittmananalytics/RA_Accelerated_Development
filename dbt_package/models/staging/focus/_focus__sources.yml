@@ -2,9 +2,9 @@ version: 2
 
 sources:
   - name: raw_focus
-    description: Prior attainment data from Focus system
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-    schema: raw_focus
+    description: Prior attainment data from Focus system (using seed data for testing)
+    database: ra-warehouse-dev
+    schema: analytics_seed_raw_focus
     loader: fivetran
     loaded_at_field: _sdc_extracted_at
 

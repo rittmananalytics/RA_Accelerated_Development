@@ -38,36 +38,19 @@ final as (
 
         -- Cohort measures
         cp.total_cohort_count,
-        cast(null as int64) as a_level_cohort_count,
-        cast(null as int64) as btec_cohort_count,
-        cast(null as int64) as vocational_cohort_count,
 
-        -- Attainment metrics
-        cp.pass_rate_pct,
-        cp.high_grade_rate_pct,
-        cp.average_grade_points,
-        cp.average_ucas_points,
+        -- Performance metrics (from Sixth Sense)
+        cp.avg_pass_rate_pct,
+        cp.avg_high_grades_pct,
+        cp.avg_completion_rate_pct,
+        cp.avg_retention_rate_pct,
+        cp.avg_achievement_rate_pct,
+        cp.avg_attendance_rate_pct,
 
-        -- Value-added metrics
-        cp.va_score,
-        cp.va_band,
-        cp.va_confidence_lower,
-        cp.va_confidence_upper,
-        cp.va_percentile,
-        cp.va_national_rank,
-
-        -- Sixth Sense metrics
-        cp.sixth_sense_score,
-        cp.sixth_sense_band,
-
-        -- National benchmarks
-        cast(null as numeric) as national_pass_rate_pct,
-        cast(null as numeric) as national_high_grade_pct,
-        cp.national_percentile_rank,
-
-        -- Variance from benchmark
-        cast(null as numeric) as pass_rate_vs_national_pct,
-        cast(null as numeric) as high_grade_vs_national_pct,
+        -- Value-added metrics (from VA reports)
+        cp.avg_value_added_score,
+        cp.avg_confidence_lower,
+        cp.avg_confidence_upper,
 
         -- Metadata
         cp.report_date,

@@ -6,11 +6,17 @@
 }}
 
 {#-
-Joins student detail with extended demographic data.
+Joins student master with student detail and extended demographic data.
 Creates a single view of all student demographics for a given academic year.
 -#}
 
-with student_detail as (
+with student as (
+
+    select * from {{ ref('stg_prosolution__student') }}
+
+),
+
+student_detail as (
 
     select * from {{ ref('stg_prosolution__student_detail') }}
 
@@ -36,32 +42,43 @@ joined as (
         sd.student_id,
         sd.academic_year_id,
 
-        -- Core demographics from student_detail
-        sd.gender_code,
-        sd.gender,
-        sd.date_of_birth,
-        sd.ethnicity_code,
-        sd.ethnicity_description,
-        sd.ethnicity_group,
+        -- Core demographics from student master
+        s.first_name,
+        s.last_name,
+        s.full_name,
+        s.date_of_birth,
+        s.gender,
+        s.ethnicity,
+        s.is_active,
+
+        -- Location from student_detail
         sd.postcode,
         sd.postcode_area,
-        sd.is_current,
+
+        -- SEND flags from student_detail
+        sd.lldd_code,
+        sd.is_send,
+        sd.is_high_needs,
+        sd.primary_send_type,
+        sd.secondary_send_type,
+
+        -- Disadvantage flags from student_detail
+        sd.is_free_meals,
+        sd.is_bursary,
+        sd.is_lac,
 
         -- Extended demographics from MIS Applications
-        coalesce(ed.is_disadvantaged, false)            as is_disadvantaged,
-        coalesce(ed.is_sen, false)                      as is_sen,
-        coalesce(ed.is_pp_or_fcm, false)                as is_pp_or_fcm,
-        coalesce(ed.is_pupil_premium, false)            as is_pupil_premium,
-        coalesce(ed.is_free_school_meals, false)        as is_free_school_meals,
-        coalesce(ed.is_bursary_recipient, false)        as is_bursary_recipient,
-        coalesce(ed.is_access_plus, false)              as is_access_plus,
-        coalesce(ed.has_additional_adjustments, false)  as has_additional_adjustments,
-        coalesce(ed.has_ehcp, false)                    as has_ehcp,
-        coalesce(ed.is_lac, false)                      as is_lac,
-        coalesce(ed.is_care_leaver, false)              as is_care_leaver,
+        ed.nationality,
+        ed.country_of_birth,
+        ed.first_language,
+        ed.religion,
         coalesce(ed.is_young_carer, false)              as is_young_carer,
-        ed.sen_type,
-        ed.bursary_type,
+        coalesce(ed.is_parent_carer, false)             as is_parent_carer,
+        ed.care_leaver_status,
+        ed.household_situation,
+        ed.imd_decile,
+        ed.polar4_quintile,
+        ed.tundra_classification,
 
         -- Prior attainment from Focus
         pa.average_gcse_score,
@@ -69,7 +86,6 @@ joined as (
         pa.prior_attainment_band_code,
         pa.gcse_english_grade,
         pa.gcse_maths_grade,
-        pa.total_gcse_points,
         pa.gcse_count,
 
         -- Metadata
@@ -77,10 +93,14 @@ joined as (
         sd.loaded_at
 
     from student_detail sd
+    inner join student s
+        on sd.student_id = s.student_id
     left join extended_data ed
-        on sd.student_detail_id = ed.student_detail_id
+        on sd.student_id = ed.student_id
+        and sd.academic_year_id = ed.academic_year_id
     left join prior_attainment pa
         on sd.student_id = pa.student_id
+        and sd.academic_year_id = pa.academic_year_id
 
 )
 

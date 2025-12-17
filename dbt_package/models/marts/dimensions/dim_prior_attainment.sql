@@ -7,7 +7,7 @@
 
 {#-
 Prior attainment dimension for ALPS-style value-added analysis.
-Grain: One row per student.
+Grain: One row per student per academic year.
 -#}
 
 with source as (
@@ -20,10 +20,12 @@ final as (
 
     select
         -- Surrogate key
-        {{ generate_int_surrogate_key(['student_id']) }} as prior_attainment_key,
+        {{ generate_int_surrogate_key(['average_gcse_id']) }} as prior_attainment_key,
 
-        -- Natural key
+        -- Natural keys
+        average_gcse_id,
         student_id,
+        academic_year_id,
 
         -- GCSE metrics
         average_gcse_score,
@@ -37,7 +39,6 @@ final as (
         -- Individual subject grades
         gcse_english_grade,
         gcse_maths_grade,
-        total_gcse_points,
         gcse_count,
 
         -- Metadata

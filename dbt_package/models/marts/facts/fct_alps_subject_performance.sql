@@ -76,75 +76,17 @@ final as (
 
         -- Cohort
         ap.cohort_count,
-
-        -- A-Level grade distribution (counts)
-        ap.grade_a_star_count,
-        ap.grade_a_count,
-        ap.grade_b_count,
-        ap.grade_c_count,
-        ap.grade_d_count,
-        ap.grade_e_count,
-        ap.grade_u_count,
-        cast(null as int64) as grade_x_count,
-
-        -- A-Level grade distribution (percentages)
-        ap.grade_a_star_pct,
-        ap.grade_a_pct,
-        ap.grade_b_pct,
-        ap.grade_c_pct,
-        ap.grade_d_pct,
-        ap.grade_e_pct,
-        ap.grade_u_pct,
-        cast(null as numeric) as grade_x_pct,
-
-        -- BTEC Single Award distribution (counts)
-        ap.btec_distinction_star_count,
-        ap.btec_distinction_count,
-        ap.btec_merit_count,
-        ap.btec_pass_count,
-
-        -- BTEC Single Award distribution (percentages)
-        ap.btec_distinction_star_pct,
-        ap.btec_distinction_pct,
-        ap.btec_merit_pct,
-        ap.btec_pass_pct,
-
-        -- BTEC Double Award (not in current model but placeholders)
-        cast(null as int64) as btec_d_star_d_star_count,
-        cast(null as int64) as btec_d_star_d_count,
-        cast(null as int64) as btec_dd_count,
-        cast(null as int64) as btec_dm_count,
-        cast(null as int64) as btec_mm_count,
-        cast(null as int64) as btec_mp_count,
-        cast(null as int64) as btec_pp_count,
-
-        cast(null as numeric) as btec_d_star_d_star_pct,
-        cast(null as numeric) as btec_d_star_d_pct,
-        cast(null as numeric) as btec_dd_pct,
-        cast(null as numeric) as btec_dm_pct,
-        cast(null as numeric) as btec_mm_pct,
-        cast(null as numeric) as btec_mp_pct,
-        cast(null as numeric) as btec_pp_pct,
-
-        -- Cumulative metrics
-        ap.a_star_to_a_pct,
-        ap.a_star_to_b_pct,
-        ap.a_star_to_c_pct,
-        ap.a_star_to_e_pct,
-        ap.high_grade_pct,
-        ap.pass_rate_pct,
+        ap.average_gcse_on_entry,
 
         -- ALPS benchmarking metrics
         ap.alps_band,
         ap.alps_score,
-        cast(null as numeric) as alps_national_percentile,
+        ap.value_added_score,
+        ap.national_benchmark_grade,
 
-        -- Averages
-        ap.average_grade_points,
-        cast(null as numeric) as average_ucas_points,
-
-        -- Completion
-        cast(null as numeric) as completion_rate_pct,
+        -- Performance percentages
+        ap.pass_rate_pct,
+        ap.high_grades_pct,
 
         -- Metadata
         ap.report_date as alps_report_date,

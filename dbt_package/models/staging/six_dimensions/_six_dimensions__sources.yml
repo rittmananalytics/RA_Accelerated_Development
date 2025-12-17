@@ -2,9 +2,9 @@ version: 2
 
 sources:
   - name: raw_six_dimensions
-    description: Six Dimensions benchmarking data parsed from PDF reports
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-    schema: raw_six_dimensions
+    description: Six Dimensions benchmarking data parsed from PDF reports (using seed data for testing)
+    database: ra-warehouse-dev
+    schema: analytics_seed_raw_six_dimensions
     loader: document_ai
 
     tables:

@@ -2,9 +2,9 @@ version: 2
 
 sources:
   - name: raw_alps
-    description: ALPS provider benchmarking data parsed from PDF reports
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-    schema: raw_alps
+    description: ALPS provider benchmarking data parsed from PDF reports (using seed data for testing)
+    database: ra-warehouse-dev
+    schema: analytics_seed_raw_alps
     loader: document_ai
 
     tables:

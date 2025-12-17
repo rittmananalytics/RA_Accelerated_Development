@@ -21,38 +21,22 @@ renamed as (
         student_id,
         academic_year_id,
 
-        -- Gender (normalized)
-        upper(trim(sex))                                as gender_code,
-        case upper(trim(sex))
-            when 'M' then 'Male'
-            when 'F' then 'Female'
-            else 'Other'
-        end                                             as gender,
-
-        -- Date of birth
-        date_of_birth,
-
-        -- Ethnicity
-        ethnicity_code,
-        ethnicity_description,
-        -- Grouped ethnicity for analysis
-        case
-            when ethnicity_code in ('WBRI', 'WIRI', 'WOTH', 'WROM') then 'White'
-            when ethnicity_code in ('MWBC', 'MWBA', 'MWAS', 'MOTH') then 'Mixed'
-            when ethnicity_code in ('AIND', 'APKN', 'ABAN', 'AOTH') then 'Asian'
-            when ethnicity_code in ('BCRB', 'BAFR', 'BOTH') then 'Black'
-            when ethnicity_code in ('CHNE', 'OOTH') then 'Other'
-            when ethnicity_code = 'REFU' then 'Prefer not to say'
-            else 'Unknown'
-        end                                             as ethnicity_group,
-
         -- Location
         postcode,
         -- Extract postcode area (first part)
         split(postcode, ' ')[safe_offset(0)]           as postcode_area,
 
-        -- Flags
-        coalesce(is_current, true)                      as is_current,
+        -- SEND information
+        lldd_code,
+        coalesce(is_send, false)                        as is_send,
+        coalesce(is_high_needs, false)                  as is_high_needs,
+        primary_send_type,
+        secondary_send_type,
+
+        -- Disadvantage flags
+        coalesce(is_free_meals, false)                  as is_free_meals,
+        coalesce(is_bursary, false)                     as is_bursary,
+        coalesce(is_lac, false)                         as is_lac,
 
         -- Metadata
         'prosolution'                                   as record_source,

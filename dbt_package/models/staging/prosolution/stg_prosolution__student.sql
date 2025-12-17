@@ -19,11 +19,24 @@ renamed as (
 
         -- Identifiers
         uln,
-        student_ref,
+
+        -- Personal information
+        first_name,
+        last_name,
+        concat(first_name, ' ', last_name)              as full_name,
+        email,
+
+        -- Demographics
+        date_of_birth,
+        gender,
+        ethnicity,
+
+        -- Status
+        coalesce(is_active, true)                       as is_active,
 
         -- Dates
-        date_of_birth,
-        first_enrolment_date,
+        created_at,
+        updated_at,
 
         -- Metadata
         'prosolution'                                   as record_source,

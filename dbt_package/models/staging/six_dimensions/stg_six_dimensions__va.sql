@@ -15,35 +15,28 @@ cleaned as (
 
     select
         -- Keys
-        report_year                                     as academic_year_id,
-        trim(level)                                     as level,
+        va_report_id,
+        academic_year                                   as academic_year_id,
         trim(subject_name)                              as subject_name,
+        trim(qualification_type)                        as qualification_type,
 
         -- Cohort
-        safe_cast(cohort_size as int64)                 as cohort_count,
-
-        -- Attainment metrics
-        {{ safe_cast_percentage('pass_rate') }}         as pass_rate_pct,
-        {{ safe_cast_percentage('high_grade_rate') }}   as high_grade_rate_pct,
-        safe_cast(avg_points as numeric)                as average_points,
+        safe_cast(student_count as int64)               as cohort_count,
+        safe_cast(average_gcse_on_entry as numeric)     as average_gcse_on_entry,
 
         -- Value-added metrics
-        safe_cast(va_score as numeric)                  as va_score,
-        safe_cast(va_residual as numeric)               as va_residual,
-        trim(va_band)                                   as va_band,
-        {{ safe_cast_percentage('va_percentile') }}     as va_percentile,
-        safe_cast(va_confidence_lower as numeric)       as va_confidence_lower,
-        safe_cast(va_confidence_upper as numeric)       as va_confidence_upper,
+        safe_cast(value_added_score as numeric)         as value_added_score,
+        safe_cast(residual_score as numeric)            as residual_score,
+        expected_grade,
+        actual_avg_grade,
+        performance_band,
 
-        -- National comparison
-        {{ safe_cast_percentage('national_percentile') }} as national_percentile,
-        safe_cast(national_rank as int64)               as national_rank,
+        -- Confidence intervals
+        safe_cast(confidence_interval_lower as numeric) as confidence_interval_lower,
+        safe_cast(confidence_interval_upper as numeric) as confidence_interval_upper,
 
         -- Source metadata
-        report_filename,
-        report_type,
         report_date,
-        parsed_at,
 
         -- Metadata
         'six_dimensions'                                as record_source,

@@ -14,40 +14,31 @@ with source as (
 renamed as (
 
     select
+        -- Primary key
+        student_extended_id,
+
         -- Foreign key
-        student_detail_id,
+        student_id,
+        academic_year_id,
 
-        -- Disadvantage flag (ED = Economically Disadvantaged)
-        case when ed = 1 then true else false end       as is_disadvantaged,
+        -- Background information
+        nationality,
+        country_of_birth,
+        first_language,
+        religion,
 
-        -- SEN flag (includes Additional Adjustments)
-        case when sen = 1 then true else false end      as is_sen,
-
-        -- Pupil Premium / Free School Meals
-        case when pp_or_fcm = 1 then true else false end as is_pp_or_fcm,
-        coalesce(is_pupil_premium, false)               as is_pupil_premium,
-        coalesce(is_free_school_meals, false)           as is_free_school_meals,
-
-        -- Bursary
-        coalesce(is_bursary, false)                     as is_bursary_recipient,
-        bursary_type,
-
-        -- Access arrangements
-        coalesce(is_access_plus, false)                 as is_access_plus,
-        coalesce(has_additional_adjustments, false)     as has_additional_adjustments,
-
-        -- EHCP
-        coalesce(has_ehcp, false)                       as has_ehcp,
-
-        -- Looked After Children
-        coalesce(is_lac, false)                         as is_lac,
-        coalesce(is_care_leaver, false)                 as is_care_leaver,
-
-        -- Young Carer
+        -- Care and support flags
         coalesce(is_young_carer, false)                 as is_young_carer,
+        coalesce(is_parent_carer, false)                as is_parent_carer,
+        care_leaver_status,
+        asylum_seeker_status,
+        armed_forces_status,
+        household_situation,
 
-        -- SEND type
-        sen_type,
+        -- Deprivation indices
+        cast(imd_decile as int64)                       as imd_decile,
+        cast(polar4_quintile as int64)                  as polar4_quintile,
+        tundra_classification,
 
         -- Metadata
         'mis_applications'                              as record_source,

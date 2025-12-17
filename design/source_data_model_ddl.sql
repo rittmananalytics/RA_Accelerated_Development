@@ -1,7 +1,7 @@
 -- =====================================================================
 -- Barton Peveril Sixth Form College - Source Data Model DDL
 -- Google BigQuery Staging Layer
--- Version: 1.0
+-- Version: 2.0 (Updated to match deployed seed/staging schemas)
 -- =====================================================================
 --
 -- This DDL defines the source/staging layer tables that receive data
@@ -24,7 +24,7 @@
 -- =====================================================================
 -- RAW LAYER: PROSOLUTION SOURCE TABLES
 -- Schema: raw_prosolution
--- These tables mirror the source system structure
+-- These tables mirror the source system structure (loaded via dbt seed)
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
@@ -48,10 +48,12 @@ CREATE OR REPLACE TABLE `raw_prosolution.offering` (
     study_year                      INT64 OPTIONS(description="Current year of study (1, 2, etc.)"),
     duration                        INT64 OPTIONS(description="Total duration in years"),
 
-    -- Additional attributes (inferred from typical MIS systems)
+    -- Dates
     start_date                      DATE OPTIONS(description="Offering start date"),
     end_date                        DATE OPTIONS(description="Offering end date"),
     planned_hours                   INT64 OPTIONS(description="Planned guided learning hours"),
+
+    -- Flags
     is_active                       BOOL OPTIONS(description="Active offering flag"),
 
     -- Metadata
@@ -75,30 +77,25 @@ CREATE OR REPLACE TABLE `raw_prosolution.enrolment` (
     enrolment_id                    INT64 NOT NULL OPTIONS(description="Primary key - ProSolution EnrolmentID"),
 
     -- Foreign keys
+    student_id                      INT64 NOT NULL OPTIONS(description="FK to Student"),
     offering_id                     INT64 NOT NULL OPTIONS(description="FK to Offering"),
-    student_detail_id               INT64 NOT NULL OPTIONS(description="FK to StudentDetail"),
     completion_status_id            INT64 OPTIONS(description="FK to CompletionStatus - 1=Completed, 2=Continuing"),
 
-    -- Grade attributes
-    grade                           STRING OPTIONS(description="Achieved grade (A*, A, B, C, D, E, U, X, D*, M, P, etc.)"),
-    grade_date                      DATE OPTIONS(description="Date grade was awarded"),
-    predicted_grade                 STRING OPTIONS(description="Predicted/target grade"),
-
-    -- Enrolment attributes
+    -- Dates
     enrolment_date                  DATE OPTIONS(description="Date of enrolment"),
-    withdrawal_date                 DATE OPTIONS(description="Date of withdrawal if applicable"),
-    withdrawal_reason               STRING OPTIONS(description="Reason for withdrawal"),
+    expected_end_date               DATE OPTIONS(description="Expected end date"),
+    actual_end_date                 DATE OPTIONS(description="Actual end date if completed/withdrawn"),
 
-    -- Component grades (for modular qualifications)
-    component_1_grade               STRING OPTIONS(description="Component 1 grade"),
-    component_2_grade               STRING OPTIONS(description="Component 2 grade"),
-    component_3_grade               STRING OPTIONS(description="Component 3 grade"),
-    coursework_grade                STRING OPTIONS(description="Coursework/NEA grade"),
-    exam_grade                      STRING OPTIONS(description="Exam grade"),
+    -- Grade attributes
+    target_grade                    STRING OPTIONS(description="Target grade"),
+    predicted_grade                 STRING OPTIONS(description="Predicted/target grade"),
+    actual_grade                    STRING OPTIONS(description="Achieved grade (A*, A, B, C, D, E, U, D*, M, P, etc.)"),
 
-    -- Re-sit tracking
-    is_resit                        BOOL OPTIONS(description="Re-sit attempt flag"),
-    original_enrolment_id           INT64 OPTIONS(description="FK to original enrolment for re-sits"),
+    -- Attendance
+    attendance_pct                  NUMERIC OPTIONS(description="Attendance percentage"),
+
+    -- Status
+    is_current                      BOOL OPTIONS(description="Current enrolment flag"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
@@ -108,6 +105,46 @@ CREATE OR REPLACE TABLE `raw_prosolution.enrolment` (
 )
 OPTIONS(
     description="Raw enrolment data from ProSolution MIS"
+);
+
+
+-- ---------------------------------------------------------------------
+-- raw_prosolution.student
+-- Source: ProSolution.dbo.Student
+-- Student master record
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE TABLE `raw_prosolution.student` (
+    -- Primary key
+    student_id                      INT64 NOT NULL OPTIONS(description="Primary key - ProSolution StudentID"),
+
+    -- Unique identifiers
+    uln                             STRING OPTIONS(description="Unique Learner Number"),
+
+    -- Personal details
+    first_name                      STRING OPTIONS(description="First name"),
+    last_name                       STRING OPTIONS(description="Last name"),
+    date_of_birth                   DATE OPTIONS(description="Date of birth"),
+    email                           STRING OPTIONS(description="Email address"),
+
+    -- Demographics
+    gender                          STRING OPTIONS(description="Gender: 'Male', 'Female'"),
+    ethnicity                       STRING OPTIONS(description="Ethnicity description"),
+
+    -- Status
+    is_active                       BOOL OPTIONS(description="Active student flag"),
+
+    -- Dates
+    created_at                      TIMESTAMP OPTIONS(description="Record creation timestamp"),
+    updated_at                      TIMESTAMP OPTIONS(description="Record last updated timestamp"),
+
+    -- Metadata
+    _sdc_extracted_at               TIMESTAMP,
+    _sdc_received_at                TIMESTAMP,
+    _sdc_batched_at                 TIMESTAMP,
+    _sdc_deleted_at                 TIMESTAMP
+)
+OPTIONS(
+    description="Raw student master data from ProSolution MIS"
 );
 
 
@@ -124,19 +161,20 @@ CREATE OR REPLACE TABLE `raw_prosolution.student_detail` (
     student_id                      INT64 NOT NULL OPTIONS(description="FK to Student master record"),
     academic_year_id                STRING OPTIONS(description="Academic year for these details"),
 
-    -- Demographics
-    sex                             STRING OPTIONS(description="Gender code: 'M', 'F'"),
-    date_of_birth                   DATE OPTIONS(description="Student date of birth"),
-    ethnicity_code                  STRING OPTIONS(description="Ethnicity code"),
-    ethnicity_description           STRING OPTIONS(description="Ethnicity description"),
-
-    -- Contact details
+    -- Location
     postcode                        STRING OPTIONS(description="Student postcode"),
-    home_postcode                   STRING OPTIONS(description="Home postcode"),
 
-    -- Status flags
-    is_current                      BOOL OPTIONS(description="Current student flag"),
-    learner_status                  STRING OPTIONS(description="Learner status code"),
+    -- SEND information
+    lldd_code                       STRING OPTIONS(description="LLDD (Learners with Learning Difficulties/Disabilities) code"),
+    is_send                         BOOL OPTIONS(description="SEN flag"),
+    is_high_needs                   BOOL OPTIONS(description="High needs flag"),
+    primary_send_type               STRING OPTIONS(description="Primary SEND type"),
+    secondary_send_type             STRING OPTIONS(description="Secondary SEND type"),
+
+    -- Disadvantage flags
+    is_free_meals                   BOOL OPTIONS(description="Free school meals eligible"),
+    is_bursary                      BOOL OPTIONS(description="Bursary recipient flag"),
+    is_lac                          BOOL OPTIONS(description="Looked After Child flag"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
@@ -146,40 +184,6 @@ CREATE OR REPLACE TABLE `raw_prosolution.student_detail` (
 )
 OPTIONS(
     description="Raw student detail data from ProSolution MIS"
-);
-
-
--- ---------------------------------------------------------------------
--- raw_prosolution.student
--- Source: ProSolution.dbo.Student
--- Student master record
--- ---------------------------------------------------------------------
-CREATE OR REPLACE TABLE `raw_prosolution.student` (
-    -- Primary key
-    student_id                      INT64 NOT NULL OPTIONS(description="Primary key - ProSolution StudentID"),
-
-    -- Unique identifiers
-    uln                             STRING OPTIONS(description="Unique Learner Number"),
-    student_ref                     STRING OPTIONS(description="Internal student reference"),
-
-    -- Personal details
-    forename                        STRING OPTIONS(description="First name"),
-    surname                         STRING OPTIONS(description="Last name"),
-    preferred_name                  STRING OPTIONS(description="Preferred name"),
-    title                           STRING OPTIONS(description="Title (Mr, Ms, etc.)"),
-
-    -- Dates
-    date_of_birth                   DATE OPTIONS(description="Date of birth"),
-    first_enrolment_date            DATE OPTIONS(description="First enrolment date at college"),
-
-    -- Metadata
-    _sdc_extracted_at               TIMESTAMP,
-    _sdc_received_at                TIMESTAMP,
-    _sdc_batched_at                 TIMESTAMP,
-    _sdc_deleted_at                 TIMESTAMP
-)
-OPTIONS(
-    description="Raw student master data from ProSolution MIS"
 );
 
 
@@ -281,38 +285,31 @@ OPTIONS(
 -- Extended student demographic flags for equity analysis
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_mis_applications.student_extended_data` (
-    -- Primary/Foreign key
-    student_detail_id               INT64 NOT NULL OPTIONS(description="FK to StudentDetail"),
+    -- Primary key
+    student_extended_id             INT64 NOT NULL OPTIONS(description="Primary key"),
 
-    -- Disadvantage flags (ED = Economically Disadvantaged)
-    ed                              INT64 OPTIONS(description="Economically Disadvantaged flag (1/0)"),
+    -- Foreign keys
+    student_id                      INT64 NOT NULL OPTIONS(description="FK to Student"),
+    academic_year_id                STRING OPTIONS(description="Academic year"),
 
-    -- SEN flags
-    sen                             INT64 OPTIONS(description="SEN + Additional Adjustments flag (1/0)"),
-    sen_type                        STRING OPTIONS(description="SEN type classification"),
+    -- Background information
+    nationality                     STRING OPTIONS(description="Student nationality"),
+    country_of_birth                STRING OPTIONS(description="Country of birth"),
+    first_language                  STRING OPTIONS(description="First/home language"),
+    religion                        STRING OPTIONS(description="Religion"),
 
-    -- Pupil Premium / Free School Meals
-    pp_or_fcm                       INT64 OPTIONS(description="Pupil Premium or Free School Meals flag (1/0)"),
-    is_pupil_premium                BOOL OPTIONS(description="Pupil Premium eligible"),
-    is_free_school_meals            BOOL OPTIONS(description="Free School Meals eligible"),
-
-    -- Bursary
-    is_bursary                      BOOL OPTIONS(description="Bursary recipient flag"),
-    bursary_type                    STRING OPTIONS(description="Type of bursary"),
-
-    -- Access arrangements
-    is_access_plus                  BOOL OPTIONS(description="AccessPlus composite flag"),
-    has_additional_adjustments      BOOL OPTIONS(description="Additional Adjustments flag"),
-
-    -- EHCP (Education, Health and Care Plan)
-    has_ehcp                        BOOL OPTIONS(description="Has EHCP flag"),
-
-    -- Looked After Children
-    is_lac                          BOOL OPTIONS(description="Looked After Child flag"),
-    is_care_leaver                  BOOL OPTIONS(description="Care leaver flag"),
-
-    -- Young Carer
+    -- Care and support flags
     is_young_carer                  BOOL OPTIONS(description="Young carer flag"),
+    is_parent_carer                 BOOL OPTIONS(description="Parent/carer flag"),
+    care_leaver_status              STRING OPTIONS(description="Care leaver status"),
+    asylum_seeker_status            STRING OPTIONS(description="Asylum seeker status"),
+    armed_forces_status             STRING OPTIONS(description="Armed forces family status"),
+    household_situation             STRING OPTIONS(description="Household situation"),
+
+    -- Deprivation indices
+    imd_decile                      INT64 OPTIONS(description="Index of Multiple Deprivation decile (1-10)"),
+    polar4_quintile                 INT64 OPTIONS(description="POLAR4 quintile (1-5)"),
+    tundra_classification           STRING OPTIONS(description="TUNDRA classification"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
@@ -337,25 +334,24 @@ OPTIONS(
 -- Student prior attainment (GCSE scores)
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_focus.average_gcse` (
-    -- Primary/Foreign key
+    -- Primary key
+    average_gcse_id                 INT64 NOT NULL OPTIONS(description="Primary key"),
+
+    -- Foreign key
     student_id                      INT64 NOT NULL OPTIONS(description="FK to Student"),
+    academic_year_id                STRING OPTIONS(description="Academic year"),
 
     -- GCSE metrics
-    average_gcse                    NUMERIC(8,2) OPTIONS(description="Average GCSE point score"),
+    average_gcse_score              NUMERIC(8,2) OPTIONS(description="Average GCSE point score"),
 
-    -- Individual subject grades (if available)
+    -- Individual subject grades
     gcse_english_grade              STRING OPTIONS(description="GCSE English grade"),
-    gcse_english_points             INT64 OPTIONS(description="GCSE English points"),
     gcse_maths_grade                STRING OPTIONS(description="GCSE Maths grade"),
-    gcse_maths_points               INT64 OPTIONS(description="GCSE Maths points"),
 
     -- Aggregate metrics
-    total_gcse_points               INT64 OPTIONS(description="Total GCSE points"),
     gcse_count                      INT64 OPTIONS(description="Number of GCSEs"),
-    gcse_a_star_to_c_count          INT64 OPTIONS(description="Number of GCSEs at A*-C/9-4"),
 
     -- Source information
-    gcse_year                       STRING OPTIONS(description="Year GCSEs were taken"),
     data_source                     STRING OPTIONS(description="Source of GCSE data"),
 
     -- Metadata
@@ -370,7 +366,7 @@ OPTIONS(
 
 
 -- =====================================================================
--- RAW LAYER: ALPS SOURCE TABLES (Stage 2)
+-- RAW LAYER: ALPS SOURCE TABLES
 -- Schema: raw_alps
 -- External benchmarking data parsed from ALPS PDF reports
 -- =====================================================================
@@ -381,52 +377,38 @@ OPTIONS(
 -- A-Level subject benchmarking data
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_alps.provider_report_a_level` (
-    -- Composite key
-    report_year                     STRING NOT NULL OPTIONS(description="Academic year of report"),
+    -- Primary key
+    alps_report_id                  INT64 NOT NULL OPTIONS(description="Primary key"),
+
+    -- Keys
+    academic_year                   STRING NOT NULL OPTIONS(description="Academic year of report"),
     subject_name                    STRING NOT NULL OPTIONS(description="ALPS subject name"),
 
     -- Cohort
-    cohort_size                     INT64 OPTIONS(description="Number of students"),
-
-    -- Grade distribution (counts)
-    grade_a_star                    INT64 OPTIONS(description="Count of A* grades"),
-    grade_a                         INT64 OPTIONS(description="Count of A grades"),
-    grade_b                         INT64 OPTIONS(description="Count of B grades"),
-    grade_c                         INT64 OPTIONS(description="Count of C grades"),
-    grade_d                         INT64 OPTIONS(description="Count of D grades"),
-    grade_e                         INT64 OPTIONS(description="Count of E grades"),
-    grade_u                         INT64 OPTIONS(description="Count of U grades"),
-
-    -- Grade distribution (percentages - as parsed from PDF)
-    pct_a_star                      STRING OPTIONS(description="Percentage A* (raw string from PDF)"),
-    pct_a                           STRING OPTIONS(description="Percentage A"),
-    pct_b                           STRING OPTIONS(description="Percentage B"),
-    pct_c                           STRING OPTIONS(description="Percentage C"),
-    pct_d                           STRING OPTIONS(description="Percentage D"),
-    pct_e                           STRING OPTIONS(description="Percentage E"),
-    pct_u                           STRING OPTIONS(description="Percentage U"),
+    student_count                   INT64 OPTIONS(description="Number of students"),
+    average_gcse_on_entry           NUMERIC(8,2) OPTIONS(description="Average GCSE on entry"),
 
     -- ALPS metrics
-    alps_grade                      STRING OPTIONS(description="ALPS grade/band (1-9)"),
-    alps_score                      STRING OPTIONS(description="ALPS score (raw)"),
-    t_score                         STRING OPTIONS(description="T-score"),
+    alps_grade                      INT64 OPTIONS(description="ALPS grade/band (1-9)"),
+    alps_score                      NUMERIC(5,2) OPTIONS(description="ALPS score"),
+    value_added_score               NUMERIC(5,2) OPTIONS(description="Value-added score"),
+    national_benchmark_grade        STRING OPTIONS(description="National benchmark grade"),
 
-    -- Averages
-    avg_points                      STRING OPTIONS(description="Average points"),
-    avg_grade                       STRING OPTIONS(description="Average grade"),
+    -- Performance percentages
+    pass_rate_pct                   NUMERIC(5,2) OPTIONS(description="Pass rate percentage"),
+    high_grades_pct                 NUMERIC(5,2) OPTIONS(description="High grades percentage (A*-B)"),
 
     -- Source metadata
-    report_filename                 STRING OPTIONS(description="Source PDF filename"),
     report_date                     DATE OPTIONS(description="Report generation date"),
-    parsed_at                       TIMESTAMP OPTIONS(description="When PDF was parsed"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
     _sdc_received_at                TIMESTAMP,
-    _sdc_batched_at                 TIMESTAMP
+    _sdc_batched_at                 TIMESTAMP,
+    _sdc_deleted_at                 TIMESTAMP
 )
 OPTIONS(
-    description="Raw ALPS A-Level provider benchmarking data parsed from PDF"
+    description="Raw ALPS A-Level provider benchmarking data"
 );
 
 
@@ -436,258 +418,233 @@ OPTIONS(
 -- BTEC subject benchmarking data
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_alps.provider_report_btec` (
-    -- Composite key
-    report_year                     STRING NOT NULL OPTIONS(description="Academic year of report"),
+    -- Primary key
+    alps_btec_report_id             INT64 NOT NULL OPTIONS(description="Primary key"),
+
+    -- Keys
+    academic_year                   STRING NOT NULL OPTIONS(description="Academic year of report"),
     subject_name                    STRING NOT NULL OPTIONS(description="ALPS subject name"),
-    qualification_size              STRING OPTIONS(description="Single, Double, Extended"),
+    qualification_type              STRING OPTIONS(description="Qualification type (Extended Certificate, etc.)"),
 
     -- Cohort
-    cohort_size                     INT64 OPTIONS(description="Number of students"),
-
-    -- Single Award grade distribution
-    grade_d_star                    INT64 OPTIONS(description="Count of D* (Distinction*)"),
-    grade_d                         INT64 OPTIONS(description="Count of D (Distinction)"),
-    grade_m                         INT64 OPTIONS(description="Count of M (Merit)"),
-    grade_p                         INT64 OPTIONS(description="Count of P (Pass)"),
-
-    -- Double Award grade distribution
-    grade_d_star_d_star             INT64 OPTIONS(description="Count of D*D*"),
-    grade_d_star_d                  INT64 OPTIONS(description="Count of D*D"),
-    grade_dd                        INT64 OPTIONS(description="Count of DD"),
-    grade_dm                        INT64 OPTIONS(description="Count of DM"),
-    grade_mm                        INT64 OPTIONS(description="Count of MM"),
-    grade_mp                        INT64 OPTIONS(description="Count of MP"),
-    grade_pp                        INT64 OPTIONS(description="Count of PP"),
-
-    -- Percentages (raw strings from PDF)
-    pct_d_star                      STRING OPTIONS(description="Percentage D*"),
-    pct_d                           STRING OPTIONS(description="Percentage D"),
-    pct_m                           STRING OPTIONS(description="Percentage M"),
-    pct_p                           STRING OPTIONS(description="Percentage P"),
+    student_count                   INT64 OPTIONS(description="Number of students"),
+    average_gcse_on_entry           NUMERIC(8,2) OPTIONS(description="Average GCSE on entry"),
 
     -- ALPS metrics
-    alps_grade                      STRING OPTIONS(description="ALPS grade/band"),
-    alps_score                      STRING OPTIONS(description="ALPS score (raw)"),
+    alps_grade                      INT64 OPTIONS(description="ALPS grade/band"),
+    alps_score                      NUMERIC(5,2) OPTIONS(description="ALPS score"),
+    value_added_score               NUMERIC(5,2) OPTIONS(description="Value-added score"),
+    national_benchmark_grade        STRING OPTIONS(description="National benchmark grade"),
+
+    -- Performance percentages
+    pass_rate_pct                   NUMERIC(5,2) OPTIONS(description="Pass rate percentage"),
+    high_grades_pct                 NUMERIC(5,2) OPTIONS(description="High grades percentage (D*-M)"),
 
     -- Source metadata
-    report_filename                 STRING OPTIONS(description="Source PDF filename"),
     report_date                     DATE OPTIONS(description="Report generation date"),
-    parsed_at                       TIMESTAMP OPTIONS(description="When PDF was parsed"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
     _sdc_received_at                TIMESTAMP,
-    _sdc_batched_at                 TIMESTAMP
+    _sdc_batched_at                 TIMESTAMP,
+    _sdc_deleted_at                 TIMESTAMP
 )
 OPTIONS(
-    description="Raw ALPS BTEC provider benchmarking data parsed from PDF"
+    description="Raw ALPS BTEC provider benchmarking data"
 );
 
 
 -- =====================================================================
--- RAW LAYER: SIX DIMENSIONS SOURCE TABLES (Stage 3)
+-- RAW LAYER: SIX DIMENSIONS SOURCE TABLES
 -- Schema: raw_six_dimensions
 -- External benchmarking data parsed from Six Dimensions PDF reports
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
 -- raw_six_dimensions.jedi_report
--- Source: Six Dimensions JEDI Reports (7 PDFs) - Parsed CSV
+-- Source: Six Dimensions JEDI Reports - Parsed CSV
 -- Justice, Equity, Diversity, Inclusion analysis
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_six_dimensions.jedi_report` (
-    -- Composite key
-    report_year                     STRING NOT NULL OPTIONS(description="Academic year of report"),
-    demographic_category            STRING NOT NULL OPTIONS(description="Category: Gender, Disadvantage, Ethnicity, SEND"),
-    demographic_value               STRING NOT NULL OPTIONS(description="Specific value within category"),
+    -- Primary key
+    jedi_report_id                  INT64 NOT NULL OPTIONS(description="Primary key"),
+
+    -- Keys
+    academic_year                   STRING NOT NULL OPTIONS(description="Academic year of report"),
+    report_type                     STRING OPTIONS(description="Report type identifier"),
+    dimension_name                  STRING NOT NULL OPTIONS(description="Dimension: Gender, Disadvantage, Ethnicity, SEND"),
+
+    -- Groups
+    student_group                   STRING NOT NULL OPTIONS(description="Student group being analysed"),
+    comparison_group                STRING OPTIONS(description="Comparison group"),
 
     -- Cohort metrics
-    cohort_size                     STRING OPTIONS(description="Cohort size (raw string)"),
-    pct_of_total                    STRING OPTIONS(description="Percentage of total cohort"),
+    student_count                   INT64 OPTIONS(description="Student group count"),
+    comparison_count                INT64 OPTIONS(description="Comparison group count"),
 
-    -- Attainment metrics (raw strings)
-    pass_rate                       STRING OPTIONS(description="Pass rate"),
-    high_grade_rate                 STRING OPTIONS(description="High grade rate (A*-B / D*-M)"),
-    avg_points                      STRING OPTIONS(description="Average points"),
+    -- Grade point metrics
+    student_avg_grade_points        NUMERIC(8,2) OPTIONS(description="Student group average grade points"),
+    comparison_avg_grade_points     NUMERIC(8,2) OPTIONS(description="Comparison group average grade points"),
+    gap_grade_points                NUMERIC(8,2) OPTIONS(description="Gap in grade points"),
 
-    -- Value-added metrics
-    va_score                        STRING OPTIONS(description="Value-added score"),
-    va_band                         STRING OPTIONS(description="VA band classification"),
-
-    -- Gap metrics
-    gap_vs_overall                  STRING OPTIONS(description="Gap vs overall cohort"),
-    gap_vs_national                 STRING OPTIONS(description="Gap vs national"),
-
-    -- National benchmarks
-    national_pass_rate              STRING OPTIONS(description="National pass rate for subgroup"),
-    national_high_grade             STRING OPTIONS(description="National high grade rate"),
+    -- Significance and performance
+    gap_significance                STRING OPTIONS(description="Gap significance"),
+    performance_band                STRING OPTIONS(description="Performance band classification"),
 
     -- Source metadata
-    report_filename                 STRING OPTIONS(description="Source PDF filename"),
-    report_type                     STRING OPTIONS(description="Report type identifier"),
     report_date                     DATE OPTIONS(description="Report generation date"),
-    parsed_at                       TIMESTAMP OPTIONS(description="When PDF was parsed"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
     _sdc_received_at                TIMESTAMP,
-    _sdc_batched_at                 TIMESTAMP
+    _sdc_batched_at                 TIMESTAMP,
+    _sdc_deleted_at                 TIMESTAMP
 )
 OPTIONS(
-    description="Raw Six Dimensions JEDI equity analysis data parsed from PDF"
+    description="Raw Six Dimensions JEDI equity analysis data"
 );
 
 
 -- ---------------------------------------------------------------------
 -- raw_six_dimensions.va_report
--- Source: Six Dimensions VA Reports (9 PDFs) - Parsed CSV
--- Value-Added analysis at subject and college level
+-- Source: Six Dimensions VA Reports - Parsed CSV
+-- Value-Added analysis at subject level
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_six_dimensions.va_report` (
-    -- Composite key
-    report_year                     STRING NOT NULL OPTIONS(description="Academic year of report"),
-    level                           STRING NOT NULL OPTIONS(description="Level: College, Subject"),
-    subject_name                    STRING OPTIONS(description="Subject name (NULL for college level)"),
+    -- Primary key
+    va_report_id                    INT64 NOT NULL OPTIONS(description="Primary key"),
+
+    -- Keys
+    academic_year                   STRING NOT NULL OPTIONS(description="Academic year of report"),
+    subject_name                    STRING OPTIONS(description="Subject name"),
+    qualification_type              STRING OPTIONS(description="Qualification type"),
 
     -- Cohort
-    cohort_size                     STRING OPTIONS(description="Cohort size (raw)"),
-
-    -- Attainment metrics
-    pass_rate                       STRING OPTIONS(description="Pass rate"),
-    high_grade_rate                 STRING OPTIONS(description="High grade rate"),
-    avg_grade                       STRING OPTIONS(description="Average grade"),
-    avg_points                      STRING OPTIONS(description="Average points"),
+    student_count                   INT64 OPTIONS(description="Cohort size"),
+    average_gcse_on_entry           NUMERIC(8,2) OPTIONS(description="Average GCSE on entry"),
 
     -- Value-added metrics
-    va_score                        STRING OPTIONS(description="VA score"),
-    va_residual                     STRING OPTIONS(description="VA residual"),
-    va_band                         STRING OPTIONS(description="VA band"),
-    va_percentile                   STRING OPTIONS(description="VA percentile rank"),
-    va_confidence_lower             STRING OPTIONS(description="VA confidence interval lower"),
-    va_confidence_upper             STRING OPTIONS(description="VA confidence interval upper"),
+    value_added_score               NUMERIC(8,4) OPTIONS(description="VA score"),
+    residual_score                  NUMERIC(8,4) OPTIONS(description="VA residual"),
+    expected_grade                  STRING OPTIONS(description="Expected grade"),
+    actual_avg_grade                STRING OPTIONS(description="Actual average grade"),
+    performance_band                STRING OPTIONS(description="VA band"),
 
-    -- National comparison
-    national_percentile             STRING OPTIONS(description="National percentile"),
-    national_rank                   STRING OPTIONS(description="National rank"),
+    -- Confidence intervals
+    confidence_interval_lower       NUMERIC(8,4) OPTIONS(description="VA confidence interval lower bound"),
+    confidence_interval_upper       NUMERIC(8,4) OPTIONS(description="VA confidence interval upper bound"),
 
     -- Source metadata
-    report_filename                 STRING,
-    report_type                     STRING,
-    report_date                     DATE,
-    parsed_at                       TIMESTAMP,
+    report_date                     DATE OPTIONS(description="Report date"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
     _sdc_received_at                TIMESTAMP,
-    _sdc_batched_at                 TIMESTAMP
+    _sdc_batched_at                 TIMESTAMP,
+    _sdc_deleted_at                 TIMESTAMP
 )
 OPTIONS(
-    description="Raw Six Dimensions Value-Added analysis data parsed from PDF"
+    description="Raw Six Dimensions Value-Added analysis data"
 );
 
 
 -- ---------------------------------------------------------------------
 -- raw_six_dimensions.sixth_sense_report
--- Source: Six Dimensions Sixth Sense Reports (16 PDFs) - Parsed CSV
--- Comprehensive performance analysis similar to VA with high grades focus
+-- Source: Six Dimensions Sixth Sense Reports - Parsed CSV
+-- Comprehensive performance analysis
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_six_dimensions.sixth_sense_report` (
-    -- Composite key
-    report_year                     STRING NOT NULL OPTIONS(description="Academic year of report"),
-    level                           STRING NOT NULL OPTIONS(description="Level: College, Subject"),
+    -- Primary key
+    sixth_sense_id                  INT64 NOT NULL OPTIONS(description="Primary key"),
+
+    -- Keys
+    academic_year                   STRING NOT NULL OPTIONS(description="Academic year of report"),
     subject_name                    STRING OPTIONS(description="Subject name"),
     qualification_type              STRING OPTIONS(description="A-Level, BTEC, etc."),
 
     -- Cohort
-    cohort_size                     STRING OPTIONS(description="Cohort size"),
+    student_count                   INT64 OPTIONS(description="Cohort size"),
 
-    -- Attainment metrics
-    pass_rate                       STRING OPTIONS(description="Pass rate"),
-    high_grade_rate                 STRING OPTIONS(description="High grade rate (A*-B)"),
-    a_star_rate                     STRING OPTIONS(description="A* rate"),
-    a_star_a_rate                   STRING OPTIONS(description="A*-A rate"),
-    avg_points                      STRING OPTIONS(description="Average points"),
+    -- Performance metrics
+    completion_rate_pct             NUMERIC(5,2) OPTIONS(description="Completion rate"),
+    retention_rate_pct              NUMERIC(5,2) OPTIONS(description="Retention rate"),
+    achievement_rate_pct            NUMERIC(5,2) OPTIONS(description="Achievement rate"),
+    pass_rate_pct                   NUMERIC(5,2) OPTIONS(description="Pass rate"),
+    high_grades_pct                 NUMERIC(5,2) OPTIONS(description="High grade rate (A*-B)"),
+    attendance_rate_pct             NUMERIC(5,2) OPTIONS(description="Attendance rate"),
 
-    -- Sixth Sense score
-    sixth_sense_score               STRING OPTIONS(description="Sixth Sense composite score"),
-    sixth_sense_band                STRING OPTIONS(description="Sixth Sense band"),
+    -- National benchmarks
+    national_completion_pct         NUMERIC(5,2) OPTIONS(description="National completion rate"),
+    national_achievement_pct        NUMERIC(5,2) OPTIONS(description="National achievement rate"),
+    national_pass_pct               NUMERIC(5,2) OPTIONS(description="National pass rate"),
 
-    -- Value-added
-    va_score                        STRING OPTIONS(description="VA score"),
-    va_band                         STRING OPTIONS(description="VA band"),
-
-    -- National comparison
-    national_pass_rate              STRING OPTIONS(description="National pass rate"),
-    national_high_grade             STRING OPTIONS(description="National high grade rate"),
-    percentile_rank                 STRING OPTIONS(description="Percentile rank"),
+    -- Performance classification
+    performance_quartile            STRING OPTIONS(description="Performance quartile"),
 
     -- Source metadata
-    report_filename                 STRING,
-    report_type                     STRING,
-    report_date                     DATE,
-    parsed_at                       TIMESTAMP,
+    report_date                     DATE OPTIONS(description="Report date"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
     _sdc_received_at                TIMESTAMP,
-    _sdc_batched_at                 TIMESTAMP
+    _sdc_batched_at                 TIMESTAMP,
+    _sdc_deleted_at                 TIMESTAMP
 )
 OPTIONS(
-    description="Raw Six Dimensions Sixth Sense analysis data parsed from PDF"
+    description="Raw Six Dimensions Sixth Sense analysis data"
 );
 
 
 -- ---------------------------------------------------------------------
 -- raw_six_dimensions.vocational_report
--- Source: Six Dimensions Vocational Reports (12 PDFs) - Parsed CSV
--- Vocational qualification benchmarking (5 datasets per PDF)
+-- Source: Six Dimensions Vocational Reports - Parsed CSV
+-- Vocational qualification benchmarking
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `raw_six_dimensions.vocational_report` (
-    -- Composite key
-    report_year                     STRING NOT NULL OPTIONS(description="Academic year of report"),
-    dataset_name                    STRING NOT NULL OPTIONS(description="Dataset within report (1 of 5)"),
-    level                           STRING OPTIONS(description="Level: College, Subject"),
+    -- Primary key
+    vocational_report_id            INT64 NOT NULL OPTIONS(description="Primary key"),
+
+    -- Keys
+    academic_year                   STRING NOT NULL OPTIONS(description="Academic year of report"),
     subject_name                    STRING OPTIONS(description="Subject/qualification name"),
     qualification_type              STRING OPTIONS(description="BTEC, Cambridge Technical, etc."),
     qualification_size              STRING OPTIONS(description="Certificate, Extended Certificate, Diploma"),
 
     -- Cohort
-    cohort_size                     STRING OPTIONS(description="Cohort size"),
+    student_count                   INT64 OPTIONS(description="Cohort size"),
+    average_gcse_on_entry           NUMERIC(8,2) OPTIONS(description="Average GCSE on entry"),
+
+    -- Performance metrics
+    completion_rate_pct             NUMERIC(5,2) OPTIONS(description="Completion rate"),
+    achievement_rate_pct            NUMERIC(5,2) OPTIONS(description="Achievement rate"),
+    pass_rate_pct                   NUMERIC(5,2) OPTIONS(description="Pass rate"),
 
     -- Grade distribution (BTEC-style)
-    pct_distinction_star            STRING OPTIONS(description="% D*"),
-    pct_distinction                 STRING OPTIONS(description="% D"),
-    pct_merit                       STRING OPTIONS(description="% M"),
-    pct_pass                        STRING OPTIONS(description="% P"),
+    distinction_star_pct            NUMERIC(5,2) OPTIONS(description="% D*"),
+    distinction_pct                 NUMERIC(5,2) OPTIONS(description="% D"),
+    merit_pct                       NUMERIC(5,2) OPTIONS(description="% M"),
+    pass_pct                        NUMERIC(5,2) OPTIONS(description="% P"),
+    near_pass_pct                   NUMERIC(5,2) OPTIONS(description="% near pass"),
+    fail_pct                        NUMERIC(5,2) OPTIONS(description="% fail"),
 
-    -- Attainment metrics
-    pass_rate                       STRING OPTIONS(description="Pass rate"),
-    high_grade_rate                 STRING OPTIONS(description="High grade rate (D*-M)"),
-    avg_points                      STRING OPTIONS(description="Average points"),
+    -- National benchmarks
+    national_achievement_pct        NUMERIC(5,2) OPTIONS(description="National achievement rate"),
+    national_distinction_plus_pct   NUMERIC(5,2) OPTIONS(description="National D*/D rate"),
 
-    -- Value-added
-    va_score                        STRING OPTIONS(description="VA score"),
-    va_band                         STRING OPTIONS(description="VA band"),
-
-    -- National comparison
-    national_pass_rate              STRING OPTIONS(description="National pass rate"),
-    national_high_grade             STRING OPTIONS(description="National high grade"),
-    percentile_rank                 STRING OPTIONS(description="Percentile rank"),
+    -- Performance band
+    performance_band                STRING OPTIONS(description="Performance band classification"),
 
     -- Source metadata
-    report_filename                 STRING,
-    report_type                     STRING,
-    dataset_index                   INT64 OPTIONS(description="Dataset index within PDF (1-5)"),
-    report_date                     DATE,
-    parsed_at                       TIMESTAMP,
+    report_date                     DATE OPTIONS(description="Report date"),
 
     -- Metadata
     _sdc_extracted_at               TIMESTAMP,
     _sdc_received_at                TIMESTAMP,
-    _sdc_batched_at                 TIMESTAMP
+    _sdc_batched_at                 TIMESTAMP,
+    _sdc_deleted_at                 TIMESTAMP
 )
 OPTIONS(
-    description="Raw Six Dimensions Vocational benchmarking data parsed from PDF"
+    description="Raw Six Dimensions Vocational benchmarking data"
 );
 
 
@@ -724,8 +681,6 @@ CREATE OR REPLACE TABLE `staging.stg_prosolution__offering` (
 
     -- Flags
     is_active                       BOOL,
-
-    -- Derived
     is_valid_qualification          BOOL OPTIONS(description="Excludes enrichment, tutor groups, etc."),
 
     -- Metadata
@@ -746,28 +701,26 @@ CREATE OR REPLACE TABLE `staging.stg_prosolution__enrolment` (
     enrolment_id                    INT64 NOT NULL,
 
     -- Foreign keys
+    student_id                      INT64 NOT NULL,
     offering_id                     INT64 NOT NULL,
-    student_detail_id               INT64 NOT NULL,
     completion_status_id            INT64,
 
+    -- Dates
+    enrolment_date                  DATE,
+    expected_end_date               DATE,
+    actual_end_date                 DATE,
+
     -- Grade (cleaned and validated)
-    grade                           STRING,
-    grade_date                      DATE,
+    target_grade                    STRING,
     predicted_grade                 STRING,
+    actual_grade                    STRING,
+
+    -- Attendance
+    attendance_pct                  NUMERIC,
 
     -- Status flags
-    is_completed                    BOOL,
-    is_continuing                   BOOL,
-    is_withdrawn                    BOOL,
-
-    -- Re-sit tracking
-    is_resit                        BOOL,
-    original_enrolment_id           INT64,
-
-    -- Component grades
-    component_1_grade               STRING,
-    component_2_grade               STRING,
-    component_3_grade               STRING,
+    is_current                      BOOL,
+    is_valid_completion             BOOL,
 
     -- Metadata
     record_source                   STRING,
@@ -775,6 +728,44 @@ CREATE OR REPLACE TABLE `staging.stg_prosolution__enrolment` (
 )
 OPTIONS(
     description="Staged enrolment data from ProSolution"
+);
+
+
+-- ---------------------------------------------------------------------
+-- staging.stg_prosolution__student
+-- Cleaned student master data
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE TABLE `staging.stg_prosolution__student` (
+    -- Primary key
+    student_id                      INT64 NOT NULL,
+
+    -- Identifiers
+    uln                             STRING,
+
+    -- Personal information
+    first_name                      STRING,
+    last_name                       STRING,
+    full_name                       STRING OPTIONS(description="Concatenated first_name + last_name"),
+    email                           STRING,
+
+    -- Demographics
+    date_of_birth                   DATE,
+    gender                          STRING OPTIONS(description="Gender: 'Male', 'Female'"),
+    ethnicity                       STRING,
+
+    -- Status
+    is_active                       BOOL,
+
+    -- Dates
+    created_at                      TIMESTAMP,
+    updated_at                      TIMESTAMP,
+
+    -- Metadata
+    record_source                   STRING,
+    loaded_at                       TIMESTAMP
+)
+OPTIONS(
+    description="Staged student master data from ProSolution"
 );
 
 
@@ -790,20 +781,21 @@ CREATE OR REPLACE TABLE `staging.stg_prosolution__student_detail` (
     student_id                      INT64 NOT NULL,
     academic_year_id                STRING,
 
-    -- Demographics (cleaned)
-    gender_code                     STRING OPTIONS(description="Normalized: 'M', 'F'"),
-    gender                          STRING OPTIONS(description="Expanded: 'Male', 'Female'"),
-    date_of_birth                   DATE,
-    ethnicity_code                  STRING,
-    ethnicity_description           STRING,
-    ethnicity_group                 STRING OPTIONS(description="Grouped ethnicity for analysis"),
-
     -- Location
     postcode                        STRING,
     postcode_area                   STRING OPTIONS(description="First part of postcode"),
 
-    -- Flags
-    is_current                      BOOL,
+    -- SEND information
+    lldd_code                       STRING,
+    is_send                         BOOL,
+    is_high_needs                   BOOL,
+    primary_send_type               STRING,
+    secondary_send_type             STRING,
+
+    -- Disadvantage flags
+    is_free_meals                   BOOL,
+    is_bursary                      BOOL,
+    is_lac                          BOOL OPTIONS(description="Looked After Child"),
 
     -- Metadata
     record_source                   STRING,
@@ -811,31 +803,6 @@ CREATE OR REPLACE TABLE `staging.stg_prosolution__student_detail` (
 )
 OPTIONS(
     description="Staged student detail data from ProSolution"
-);
-
-
--- ---------------------------------------------------------------------
--- staging.stg_prosolution__student
--- Cleaned student master data
--- ---------------------------------------------------------------------
-CREATE OR REPLACE TABLE `staging.stg_prosolution__student` (
-    -- Primary key
-    student_id                      INT64 NOT NULL,
-
-    -- Identifiers
-    uln                             STRING,
-    student_ref                     STRING,
-
-    -- Dates
-    date_of_birth                   DATE,
-    first_enrolment_date            DATE,
-
-    -- Metadata
-    record_source                   STRING,
-    loaded_at                       TIMESTAMP
-)
-OPTIONS(
-    description="Staged student master data from ProSolution"
 );
 
 
@@ -850,8 +817,12 @@ CREATE OR REPLACE TABLE `staging.stg_prosolution__course_header` (
     -- Attributes
     course_code                     STRING,
     course_name                     STRING,
+    course_description              STRING,
+
+    -- Classification
     subject_area                    STRING,
     department                      STRING,
+    faculty                         STRING,
 
     -- Flags
     is_active                       BOOL,
@@ -875,9 +846,10 @@ CREATE OR REPLACE TABLE `staging.stg_prosolution__offering_type` (
 
     -- Attributes
     offering_type_name              STRING,
+    offering_type_description       STRING,
     offering_type_category          STRING,
     qualification_level             STRING,
-    grading_scale                   STRING,
+    grading_scale                   STRING OPTIONS(description="Derived: 'A*-E', 'D*-P', 'Other'"),
 
     -- Flags
     is_academic                     BOOL,
@@ -923,26 +895,31 @@ OPTIONS(
 -- Cleaned extended student demographics
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_mis_applications__student_extended_data` (
+    -- Primary key
+    student_extended_id             INT64 NOT NULL,
+
     -- Foreign key
-    student_detail_id               INT64 NOT NULL,
+    student_id                      INT64 NOT NULL,
+    academic_year_id                STRING,
 
-    -- Demographic flags (converted to BOOL)
-    is_disadvantaged                BOOL OPTIONS(description="Economically Disadvantaged"),
-    is_sen                          BOOL OPTIONS(description="SEN + Additional Adjustments"),
-    is_pupil_premium                BOOL OPTIONS(description="Pupil Premium eligible"),
-    is_free_school_meals            BOOL OPTIONS(description="Free School Meals eligible"),
-    is_pp_or_fcm                    BOOL OPTIONS(description="PP or FSM"),
-    is_bursary_recipient            BOOL,
-    is_access_plus                  BOOL,
-    has_additional_adjustments      BOOL,
-    has_ehcp                        BOOL,
-    is_lac                          BOOL OPTIONS(description="Looked After Child"),
-    is_care_leaver                  BOOL,
+    -- Background information
+    nationality                     STRING,
+    country_of_birth                STRING,
+    first_language                  STRING,
+    religion                        STRING,
+
+    -- Care and support flags
     is_young_carer                  BOOL,
+    is_parent_carer                 BOOL,
+    care_leaver_status              STRING,
+    asylum_seeker_status            STRING,
+    armed_forces_status             STRING,
+    household_situation             STRING,
 
-    -- Classification
-    sen_type                        STRING,
-    bursary_type                    STRING,
+    -- Deprivation indices
+    imd_decile                      INT64 OPTIONS(description="Index of Multiple Deprivation decile (1-10)"),
+    polar4_quintile                 INT64 OPTIONS(description="POLAR4 quintile (1-5)"),
+    tundra_classification           STRING,
 
     -- Metadata
     record_source                   STRING,
@@ -958,26 +935,27 @@ OPTIONS(
 -- Cleaned prior attainment data
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_focus__average_gcse` (
+    -- Primary key
+    average_gcse_id                 INT64 NOT NULL,
+
     -- Foreign key
     student_id                      INT64 NOT NULL,
+    academic_year_id                STRING,
 
     -- GCSE metrics (typed)
-    average_gcse_score              NUMERIC(8,2),
+    average_gcse_score              NUMERIC,
 
     -- Prior attainment band (derived)
     prior_attainment_band           STRING OPTIONS(description="Low (<4.77), Mid (4.77-6.09), High (>6.09), N/A"),
     prior_attainment_band_code      INT64 OPTIONS(description="0=N/A, 1=Low, 2=Mid, 3=High"),
 
     -- Individual subjects
-    gcse_english_grade              STRING,
-    gcse_maths_grade                STRING,
-
-    -- Aggregates
-    total_gcse_points               INT64,
+    gcse_english_grade              INT64,
+    gcse_maths_grade                INT64,
     gcse_count                      INT64,
 
     -- Source
-    gcse_year                       STRING,
+    data_source                     STRING,
 
     -- Metadata
     record_source                   STRING,
@@ -994,40 +972,25 @@ OPTIONS(
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_alps__a_level_performance` (
     -- Keys
+    alps_report_id                  INT64 NOT NULL,
     academic_year_id                STRING NOT NULL,
     alps_subject_name               STRING NOT NULL,
 
     -- Cohort
     cohort_count                    INT64,
-
-    -- Grade distribution (typed)
-    grade_a_star_count              INT64,
-    grade_a_count                   INT64,
-    grade_b_count                   INT64,
-    grade_c_count                   INT64,
-    grade_d_count                   INT64,
-    grade_e_count                   INT64,
-    grade_u_count                   INT64,
-
-    -- Percentages (cleaned and typed)
-    grade_a_star_pct                NUMERIC(5,2),
-    grade_a_pct                     NUMERIC(5,2),
-    grade_b_pct                     NUMERIC(5,2),
-    grade_c_pct                     NUMERIC(5,2),
-    grade_d_pct                     NUMERIC(5,2),
-    grade_e_pct                     NUMERIC(5,2),
-    grade_u_pct                     NUMERIC(5,2),
+    average_gcse_on_entry           NUMERIC,
 
     -- ALPS metrics (typed)
     alps_band                       INT64,
-    alps_score                      NUMERIC(5,2),
-    t_score                         NUMERIC(5,2),
+    alps_score                      NUMERIC,
+    value_added_score               NUMERIC,
+    national_benchmark_grade        STRING,
 
-    -- Averages
-    average_grade_points            NUMERIC(8,2),
+    -- Performance percentages
+    pass_rate_pct                   NUMERIC,
+    high_grades_pct                 NUMERIC,
 
     -- Source metadata
-    report_filename                 STRING,
     report_date                     DATE,
 
     -- Metadata
@@ -1045,40 +1008,26 @@ OPTIONS(
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_alps__btec_performance` (
     -- Keys
+    alps_btec_report_id             INT64 NOT NULL,
     academic_year_id                STRING NOT NULL,
     alps_subject_name               STRING NOT NULL,
-    qualification_size              STRING,
+    qualification_type              STRING,
 
     -- Cohort
     cohort_count                    INT64,
-
-    -- Single Award grades (typed)
-    btec_distinction_star_count     INT64,
-    btec_distinction_count          INT64,
-    btec_merit_count                INT64,
-    btec_pass_count                 INT64,
-
-    -- Double Award grades (typed)
-    btec_d_star_d_star_count        INT64,
-    btec_d_star_d_count             INT64,
-    btec_dd_count                   INT64,
-    btec_dm_count                   INT64,
-    btec_mm_count                   INT64,
-    btec_mp_count                   INT64,
-    btec_pp_count                   INT64,
-
-    -- Percentages
-    btec_distinction_star_pct       NUMERIC(5,2),
-    btec_distinction_pct            NUMERIC(5,2),
-    btec_merit_pct                  NUMERIC(5,2),
-    btec_pass_pct                   NUMERIC(5,2),
+    average_gcse_on_entry           NUMERIC,
 
     -- ALPS metrics
     alps_band                       INT64,
-    alps_score                      NUMERIC(5,2),
+    alps_score                      NUMERIC,
+    value_added_score               NUMERIC,
+    national_benchmark_grade        STRING,
+
+    -- Performance percentages
+    pass_rate_pct                   NUMERIC,
+    high_grades_pct                 NUMERIC,
 
     -- Source metadata
-    report_filename                 STRING,
     report_date                     DATE,
 
     -- Metadata
@@ -1096,34 +1045,29 @@ OPTIONS(
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_six_dimensions__jedi` (
     -- Keys
+    jedi_report_id                  INT64 NOT NULL,
     academic_year_id                STRING NOT NULL,
-    demographic_category            STRING NOT NULL,
-    demographic_value               STRING NOT NULL,
+    report_type                     STRING,
+    dimension_name                  STRING NOT NULL,
 
-    -- Cohort (typed)
-    cohort_count                    INT64,
-    cohort_pct                      NUMERIC(5,2),
+    -- Groups
+    student_group                   STRING NOT NULL,
+    comparison_group                STRING,
 
-    -- Attainment (typed)
-    pass_rate_pct                   NUMERIC(5,2),
-    high_grade_rate_pct             NUMERIC(5,2),
-    average_points                  NUMERIC(8,2),
+    -- Cohort metrics
+    student_count                   INT64,
+    comparison_count                INT64,
 
-    -- Value-added (typed)
-    va_score                        NUMERIC(8,4),
-    va_band                         STRING,
+    -- Grade point metrics
+    student_avg_grade_points        NUMERIC,
+    comparison_avg_grade_points     NUMERIC,
+    gap_grade_points                NUMERIC,
 
-    -- Gaps (typed)
-    gap_vs_overall_pct              NUMERIC(5,2),
-    gap_vs_national_pct             NUMERIC(5,2),
-
-    -- National benchmarks
-    national_pass_rate_pct          NUMERIC(5,2),
-    national_high_grade_pct         NUMERIC(5,2),
+    -- Significance and performance
+    gap_significance                STRING,
+    performance_band                STRING,
 
     -- Source metadata
-    report_filename                 STRING,
-    report_type                     STRING,
     report_date                     DATE,
 
     -- Metadata
@@ -1141,33 +1085,27 @@ OPTIONS(
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_six_dimensions__va` (
     -- Keys
+    va_report_id                    INT64 NOT NULL,
     academic_year_id                STRING NOT NULL,
-    level                           STRING NOT NULL,
     subject_name                    STRING,
+    qualification_type              STRING,
 
     -- Cohort
     cohort_count                    INT64,
-
-    -- Attainment (typed)
-    pass_rate_pct                   NUMERIC(5,2),
-    high_grade_rate_pct             NUMERIC(5,2),
-    average_points                  NUMERIC(8,2),
+    average_gcse_on_entry           NUMERIC,
 
     -- Value-added (typed)
-    va_score                        NUMERIC(8,4),
-    va_residual                     NUMERIC(8,4),
-    va_band                         STRING,
-    va_percentile                   NUMERIC(5,2),
-    va_confidence_lower             NUMERIC(8,4),
-    va_confidence_upper             NUMERIC(8,4),
+    value_added_score               NUMERIC,
+    residual_score                  NUMERIC,
+    expected_grade                  STRING,
+    actual_avg_grade                STRING,
+    performance_band                STRING,
 
-    -- National comparison
-    national_percentile             NUMERIC(5,2),
-    national_rank                   INT64,
+    -- Confidence intervals
+    confidence_interval_lower       NUMERIC,
+    confidence_interval_upper       NUMERIC,
 
     -- Source metadata
-    report_filename                 STRING,
-    report_type                     STRING,
     report_date                     DATE,
 
     -- Metadata
@@ -1185,37 +1123,31 @@ OPTIONS(
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_six_dimensions__sixth_sense` (
     -- Keys
+    sixth_sense_id                  INT64 NOT NULL,
     academic_year_id                STRING NOT NULL,
-    level                           STRING NOT NULL,
     subject_name                    STRING,
     qualification_type              STRING,
 
     -- Cohort
     cohort_count                    INT64,
 
-    -- Attainment (typed)
-    pass_rate_pct                   NUMERIC(5,2),
-    high_grade_rate_pct             NUMERIC(5,2),
-    a_star_rate_pct                 NUMERIC(5,2),
-    a_star_a_rate_pct               NUMERIC(5,2),
-    average_points                  NUMERIC(8,2),
+    -- Performance metrics
+    completion_rate_pct             NUMERIC,
+    retention_rate_pct              NUMERIC,
+    achievement_rate_pct            NUMERIC,
+    pass_rate_pct                   NUMERIC,
+    high_grades_pct                 NUMERIC,
+    attendance_rate_pct             NUMERIC,
 
-    -- Sixth Sense metrics
-    sixth_sense_score               NUMERIC(8,4),
-    sixth_sense_band                STRING,
+    -- National benchmarks
+    national_completion_pct         NUMERIC,
+    national_achievement_pct        NUMERIC,
+    national_pass_pct               NUMERIC,
 
-    -- Value-added
-    va_score                        NUMERIC(8,4),
-    va_band                         STRING,
-
-    -- National comparison
-    national_pass_rate_pct          NUMERIC(5,2),
-    national_high_grade_pct         NUMERIC(5,2),
-    percentile_rank                 NUMERIC(5,2),
+    -- Performance classification
+    performance_quartile            STRING,
 
     -- Source metadata
-    report_filename                 STRING,
-    report_type                     STRING,
     report_date                     DATE,
 
     -- Metadata
@@ -1233,40 +1165,37 @@ OPTIONS(
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE TABLE `staging.stg_six_dimensions__vocational` (
     -- Keys
+    vocational_report_id            INT64 NOT NULL,
     academic_year_id                STRING NOT NULL,
-    dataset_name                    STRING NOT NULL,
-    level                           STRING,
     subject_name                    STRING,
     qualification_type              STRING,
     qualification_size              STRING,
 
     -- Cohort
     cohort_count                    INT64,
+    average_gcse_on_entry           NUMERIC,
+
+    -- Performance metrics
+    completion_rate_pct             NUMERIC,
+    achievement_rate_pct            NUMERIC,
+    pass_rate_pct                   NUMERIC,
 
     -- Grade distribution (typed)
-    distinction_star_pct            NUMERIC(5,2),
-    distinction_pct                 NUMERIC(5,2),
-    merit_pct                       NUMERIC(5,2),
-    pass_pct                        NUMERIC(5,2),
+    distinction_star_pct            NUMERIC,
+    distinction_pct                 NUMERIC,
+    merit_pct                       NUMERIC,
+    pass_pct                        NUMERIC,
+    near_pass_pct                   NUMERIC,
+    fail_pct                        NUMERIC,
 
-    -- Attainment
-    pass_rate_pct                   NUMERIC(5,2),
-    high_grade_rate_pct             NUMERIC(5,2),
-    average_points                  NUMERIC(8,2),
+    -- National benchmarks
+    national_achievement_pct        NUMERIC,
+    national_distinction_plus_pct   NUMERIC,
 
-    -- Value-added
-    va_score                        NUMERIC(8,4),
-    va_band                         STRING,
-
-    -- National comparison
-    national_pass_rate_pct          NUMERIC(5,2),
-    national_high_grade_pct         NUMERIC(5,2),
-    percentile_rank                 NUMERIC(5,2),
+    -- Performance band
+    performance_band                STRING,
 
     -- Source metadata
-    report_filename                 STRING,
-    report_type                     STRING,
-    dataset_index                   INT64,
     report_date                     DATE,
 
     -- Metadata

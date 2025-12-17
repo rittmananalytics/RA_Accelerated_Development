@@ -15,39 +15,32 @@ cleaned as (
 
     select
         -- Keys
-        report_year                                     as academic_year_id,
-        trim(level)                                     as level,
+        sixth_sense_id,
+        academic_year                                   as academic_year_id,
         trim(subject_name)                              as subject_name,
         trim(qualification_type)                        as qualification_type,
 
         -- Cohort
-        safe_cast(cohort_size as int64)                 as cohort_count,
+        safe_cast(student_count as int64)               as cohort_count,
 
-        -- Attainment metrics
-        {{ safe_cast_percentage('pass_rate') }}         as pass_rate_pct,
-        {{ safe_cast_percentage('high_grade_rate') }}   as high_grade_rate_pct,
-        {{ safe_cast_percentage('a_star_rate') }}       as a_star_rate_pct,
-        {{ safe_cast_percentage('a_star_a_rate') }}     as a_star_a_rate_pct,
-        safe_cast(avg_points as numeric)                as average_points,
+        -- Performance metrics
+        safe_cast(completion_rate_pct as numeric)       as completion_rate_pct,
+        safe_cast(retention_rate_pct as numeric)        as retention_rate_pct,
+        safe_cast(achievement_rate_pct as numeric)      as achievement_rate_pct,
+        safe_cast(pass_rate_pct as numeric)             as pass_rate_pct,
+        safe_cast(high_grades_pct as numeric)           as high_grades_pct,
+        safe_cast(attendance_rate_pct as numeric)       as attendance_rate_pct,
 
-        -- Sixth Sense specific metrics
-        safe_cast(sixth_sense_score as numeric)         as sixth_sense_score,
-        trim(sixth_sense_band)                          as sixth_sense_band,
+        -- National benchmarks
+        safe_cast(national_completion_pct as numeric)   as national_completion_pct,
+        safe_cast(national_achievement_pct as numeric)  as national_achievement_pct,
+        safe_cast(national_pass_pct as numeric)         as national_pass_pct,
 
-        -- Value-added
-        safe_cast(va_score as numeric)                  as va_score,
-        trim(va_band)                                   as va_band,
-
-        -- National comparison
-        {{ safe_cast_percentage('national_pass_rate') }} as national_pass_rate_pct,
-        {{ safe_cast_percentage('national_high_grade') }} as national_high_grade_pct,
-        {{ safe_cast_percentage('percentile_rank') }}   as percentile_rank,
+        -- Performance quartile
+        performance_quartile,
 
         -- Source metadata
-        report_filename,
-        report_type,
         report_date,
-        parsed_at,
 
         -- Metadata
         'six_dimensions'                                as record_source,

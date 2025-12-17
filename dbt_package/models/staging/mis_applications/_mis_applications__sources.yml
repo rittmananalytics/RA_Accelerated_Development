@@ -2,9 +2,9 @@ version: 2
 
 sources:
   - name: raw_mis_applications
-    description: Extended student demographic data from MIS Applications
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-    schema: raw_mis_applications
+    description: Extended student demographic data from MIS Applications (using seed data for testing)
+    database: ra-warehouse-dev
+    schema: analytics_seed_raw_mis_applications
     loader: fivetran
     loaded_at_field: _sdc_extracted_at
 

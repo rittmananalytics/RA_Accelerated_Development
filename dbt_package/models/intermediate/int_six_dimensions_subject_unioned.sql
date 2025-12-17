@@ -12,99 +12,93 @@ Unions subject-level performance data from VA, Sixth Sense, and Vocational repor
 with va_subject as (
 
     select
+        va_report_id                                    as report_id,
         academic_year_id,
         'VA'                                            as report_type,
         subject_name                                    as six_dimensions_subject_name,
-        cast(null as string)                            as qualification_type,
+        qualification_type,
         cohort_count,
-        pass_rate_pct,
-        high_grade_rate_pct,
-        average_points                                  as average_grade_points,
-        va_score,
-        va_residual,
-        va_band,
-        va_percentile,
-        va_confidence_lower,
-        va_confidence_upper,
-        cast(null as numeric)                           as national_pass_rate_pct,
-        cast(null as numeric)                           as national_high_grade_pct,
-        cast(null as numeric)                           as national_va_average,
-        national_percentile                             as percentile_rank,
-        national_rank                                   as subject_rank_national,
-        report_filename,
+        average_gcse_on_entry,
+        value_added_score,
+        residual_score,
+        expected_grade,
+        actual_avg_grade,
+        performance_band,
+        confidence_interval_lower,
+        confidence_interval_upper,
+        cast(null as numeric)                           as pass_rate_pct,
+        cast(null as numeric)                           as high_grades_pct,
+        cast(null as numeric)                           as completion_rate_pct,
+        cast(null as numeric)                           as achievement_rate_pct,
+        cast(null as string)                            as performance_quartile,
         report_date,
         record_source,
         loaded_at
 
     from {{ ref('stg_six_dimensions__va') }}
-    where level = 'Subject'
-      and subject_name is not null
+    where subject_name is not null
 
 ),
 
 sixth_sense_subject as (
 
     select
+        sixth_sense_id                                  as report_id,
         academic_year_id,
         'Sixth Sense'                                   as report_type,
         subject_name                                    as six_dimensions_subject_name,
         qualification_type,
         cohort_count,
+        cast(null as numeric)                           as average_gcse_on_entry,
+        cast(null as numeric)                           as value_added_score,
+        cast(null as numeric)                           as residual_score,
+        cast(null as string)                            as expected_grade,
+        cast(null as string)                            as actual_avg_grade,
+        cast(null as string)                            as performance_band,
+        cast(null as numeric)                           as confidence_interval_lower,
+        cast(null as numeric)                           as confidence_interval_upper,
         pass_rate_pct,
-        high_grade_rate_pct,
-        average_points                                  as average_grade_points,
-        va_score,
-        cast(null as numeric)                           as va_residual,
-        va_band,
-        cast(null as numeric)                           as va_percentile,
-        cast(null as numeric)                           as va_confidence_lower,
-        cast(null as numeric)                           as va_confidence_upper,
-        national_pass_rate_pct,
-        national_high_grade_pct,
-        cast(null as numeric)                           as national_va_average,
-        percentile_rank,
-        cast(null as int64)                             as subject_rank_national,
-        report_filename,
+        high_grades_pct,
+        completion_rate_pct,
+        achievement_rate_pct,
+        performance_quartile,
         report_date,
         record_source,
         loaded_at
 
     from {{ ref('stg_six_dimensions__sixth_sense') }}
-    where level = 'Subject'
-      and subject_name is not null
+    where subject_name is not null
 
 ),
 
 vocational_subject as (
 
     select
+        vocational_report_id                            as report_id,
         academic_year_id,
         'Vocational'                                    as report_type,
         subject_name                                    as six_dimensions_subject_name,
         qualification_type,
         cohort_count,
+        average_gcse_on_entry,
+        cast(null as numeric)                           as value_added_score,
+        cast(null as numeric)                           as residual_score,
+        cast(null as string)                            as expected_grade,
+        cast(null as string)                            as actual_avg_grade,
+        performance_band,
+        cast(null as numeric)                           as confidence_interval_lower,
+        cast(null as numeric)                           as confidence_interval_upper,
         pass_rate_pct,
-        high_grade_rate_pct,
-        average_points                                  as average_grade_points,
-        va_score,
-        cast(null as numeric)                           as va_residual,
-        va_band,
-        cast(null as numeric)                           as va_percentile,
-        cast(null as numeric)                           as va_confidence_lower,
-        cast(null as numeric)                           as va_confidence_upper,
-        national_pass_rate_pct,
-        national_high_grade_pct,
-        cast(null as numeric)                           as national_va_average,
-        percentile_rank,
-        cast(null as int64)                             as subject_rank_national,
-        report_filename,
+        cast(null as numeric)                           as high_grades_pct,
+        completion_rate_pct,
+        achievement_rate_pct,
+        cast(null as string)                            as performance_quartile,
         report_date,
         record_source,
         loaded_at
 
     from {{ ref('stg_six_dimensions__vocational') }}
-    where level = 'Subject'
-      and subject_name is not null
+    where subject_name is not null
 
 ),
 

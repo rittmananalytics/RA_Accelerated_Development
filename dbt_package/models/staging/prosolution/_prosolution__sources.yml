@@ -2,9 +2,9 @@ version: 2
 
 sources:
   - name: raw_prosolution
-    description: Raw data from ProSolution MIS system
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-    schema: raw_prosolution
+    description: Raw data from ProSolution MIS system (using seed data for testing)
+    database: ra-warehouse-dev
+    schema: analytics_seed_raw_prosolution
     loader: fivetran
     loaded_at_field: _sdc_extracted_at
 

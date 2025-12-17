@@ -2,7 +2,7 @@ name: 'barton_peveril_analytics'
 version: '1.0.0'
 config-version: 2
 
-profile: 'barton_peveril'
+profile: 'ra_data_warehouse'
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
@@ -56,12 +56,12 @@ models:
 
     intermediate:
       +materialized: view
-      +schema: intermediate
+      +schema: integration
       +tags: ['intermediate']
 
     marts:
       +materialized: table
-      +schema: marts
+      # No custom schema - uses target schema directly (analytics_rudgepark)
       dimensions:
         +tags: ['dimensions', 'marts']
       facts:
@@ -69,11 +69,11 @@ models:
 
 seeds:
   barton_peveril_analytics:
-    +schema: seeds
+    +schema: seed
     seed_grade_points:
       +column_types:
-        grade: varchar(10)
-        qualification_type: varchar(50)
+        grade: STRING
+        qualification_type: STRING
         ucas_points: int64
         grade_points: int64
         grade_sort_order: int64
@@ -84,12 +84,12 @@ seeds:
 
     # Raw source data seeds for testing
     raw_prosolution:
-      +schema: raw_prosolution
+      +schema: seed_raw_prosolution
       +tags: ['raw', 'prosolution']
       offering_type:
         +column_types:
           offering_type_id: int64
-          qualification_level: varchar(20)
+          qualification_level: STRING
       completion_status:
         +column_types:
           completion_status_id: int64
@@ -123,7 +123,7 @@ seeds:
           attendance_pct: numeric
 
     raw_mis_applications:
-      +schema: raw_mis_applications
+      +schema: seed_raw_mis_applications
       +tags: ['raw', 'mis_applications']
       student_extended_data:
         +column_types:
@@ -133,7 +133,7 @@ seeds:
           polar4_quintile: int64
 
     raw_focus:
-      +schema: raw_focus
+      +schema: seed_raw_focus
       +tags: ['raw', 'focus']
       average_gcse:
         +column_types:
@@ -145,7 +145,7 @@ seeds:
           gcse_count: int64
 
     raw_alps:
-      +schema: raw_alps
+      +schema: seed_raw_alps
       +tags: ['raw', 'alps', 'external_benchmark']
       provider_report_a_level:
         +column_types:
@@ -167,7 +167,7 @@ seeds:
           high_grades_pct: numeric
 
     raw_six_dimensions:
-      +schema: raw_six_dimensions
+      +schema: seed_raw_six_dimensions
       +tags: ['raw', 'six_dimensions', 'external_benchmark']
       jedi_report:
         +column_types:

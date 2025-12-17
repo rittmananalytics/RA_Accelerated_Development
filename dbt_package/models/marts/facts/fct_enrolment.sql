@@ -102,8 +102,8 @@ final as (
 
         -- Grade measures
         ec.grade,
-        ec.grade_points,
-        ec.ucas_points,
+        ec.target_grade,
+        ec.predicted_grade,
 
         -- A-Level grade flags
         ec.is_grade_a_star,
@@ -113,7 +113,6 @@ final as (
         ec.is_grade_d,
         ec.is_grade_e,
         ec.is_grade_u,
-        ec.is_grade_x,
 
         -- BTEC grade flags
         ec.is_grade_distinction_star,
@@ -124,42 +123,22 @@ final as (
         -- Cumulative grade flags
         ec.is_high_grade,
         ec.is_pass,
-        ec.is_grade_a_star_to_a,
-        ec.is_grade_a_star_to_b,
-        ec.is_grade_a_star_to_c,
-        ec.is_grade_a_star_to_e,
 
         -- Prior attainment
         ec.average_gcse_score,
         ec.prior_attainment_band,
-        ec.is_prior_low,
-        ec.is_prior_mid,
-        ec.is_prior_high,
-        ec.is_prior_na,
 
         -- Demographics
         ec.gender,
-        ec.is_male,
-        ec.is_female,
-        ec.is_disadvantaged_int as is_disadvantaged,
-        ec.is_pp_or_fcm_int as is_pupil_premium,
-        cast(null as int64) as is_free_school_meals,  -- Need separate flag
-        ec.is_sen_int as is_sen,
-        ec.is_access_plus_int as is_access_plus,
-        ec.ethnicity_group,
+        ec.ethnicity,
+        ec.is_send,
+        ec.is_free_meals,
+        ec.is_bursary,
+        ec.is_lac,
+        ec.is_young_carer,
 
-        -- Re-sit tracking
-        ec.is_first_sit,
-        ec.is_resit,
-        cast(null as string) as previous_grade,
-        cast(null as int64) as previous_grade_points,
-        cast(null as int64) as grade_improvement_points,
-        cast(null as int64) as time_to_resit_years,
-
-        -- Value-added (placeholder for future calculation)
-        cast(null as string) as target_grade,
-        cast(null as int64) as target_grade_points,
-        cast(null as numeric) as value_added_points,
+        -- Attendance
+        ec.attendance_pct,
 
         -- Counting measure
         ec.enrolment_count,
@@ -181,10 +160,11 @@ final as (
         on ec.offering_id = o.offering_id
     inner join dim_student s
         on ec.student_id = s.student_id
-    inner join dim_student_detail sd
+    left join dim_student_detail sd
         on ec.student_detail_id = sd.student_detail_id
     left join dim_prior_attainment pa
         on ec.student_id = pa.student_id
+        and ec.academic_year_id = pa.academic_year_id
     left join dim_grade g
         on ec.grade = g.grade
         and ec.grading_scale = g.grading_scale

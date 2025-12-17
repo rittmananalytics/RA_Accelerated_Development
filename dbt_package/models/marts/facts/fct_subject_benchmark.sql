@@ -8,7 +8,7 @@
 
 {#-
 Subject-level benchmarking from Six Dimensions reports.
-Grain: One row per subject per academic year.
+Grain: One row per subject per report type per academic year.
 -#}
 
 with subject_performance as (
@@ -58,11 +58,11 @@ with_trajectory as (
     select
         sp.*,
         lag(sp.pass_rate_pct) over (
-            partition by sp.six_dimensions_subject_name
+            partition by sp.six_dimensions_subject_name, sp.report_type
             order by sp.academic_year_id
         ) as prior_year_pass_rate,
         sp.pass_rate_pct - lag(sp.pass_rate_pct) over (
-            partition by sp.six_dimensions_subject_name
+            partition by sp.six_dimensions_subject_name, sp.report_type
             order by sp.academic_year_id
         ) as yoy_change_pct
 
@@ -91,34 +91,25 @@ final as (
 
         -- Cohort
         wt.cohort_count,
+        wt.average_gcse_on_entry,
 
-        -- Attainment metrics
+        -- Performance metrics
         wt.pass_rate_pct,
-        wt.high_grade_rate_pct,
-        wt.average_grade_points,
-        cast(null as numeric) as average_ucas_points,
+        wt.high_grades_pct,
+        wt.completion_rate_pct,
+        wt.achievement_rate_pct,
 
-        -- Value-added metrics
-        wt.va_score,
-        wt.va_residual,
-        wt.va_band,
-        wt.va_percentile,
-        wt.va_confidence_lower,
-        wt.va_confidence_upper,
+        -- Value-added metrics (from VA reports)
+        wt.value_added_score,
+        wt.residual_score,
+        wt.expected_grade,
+        wt.actual_avg_grade,
+        wt.performance_band,
+        wt.confidence_interval_lower,
+        wt.confidence_interval_upper,
 
-        -- National benchmarks
-        wt.national_pass_rate_pct,
-        wt.national_high_grade_pct,
-        wt.national_va_average,
-
-        -- Variance from benchmark
-        wt.pass_rate_pct - wt.national_pass_rate_pct as pass_rate_vs_national_pct,
-        wt.high_grade_rate_pct - wt.national_high_grade_pct as high_grade_vs_national_pct,
-        wt.va_score - wt.national_va_average as va_vs_national,
-
-        -- Subject ranking
-        cast(null as int64) as subject_rank_internal,
-        wt.subject_rank_national,
+        -- Sixth Sense metrics
+        wt.performance_quartile,
 
         -- Trend indicators
         case
