@@ -1,0 +1,9 @@
+vocational_report_id,academic_year,subject_name,qualification_type,qualification_size,student_count,average_gcse_on_entry,completion_rate_pct,achievement_rate_pct,pass_rate_pct,distinction_star_pct,distinction_pct,merit_pct,pass_pct,near_pass_pct,fail_pct,national_achievement_pct,national_distinction_plus_pct,performance_band,report_date,_sdc_extracted_at,_sdc_received_at,_sdc_batched_at,_sdc_deleted_at
+93001,23/24,Business,BTEC,Extended Certificate,16,5.12,100.0,100.0,100.0,12.5,43.8,31.3,12.5,0.0,0.0,91.8,48.5,Above National,2024-08-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,
+93002,23/24,Health and Social Care,BTEC,Extended Certificate,14,4.95,100.0,100.0,100.0,21.4,50.0,21.4,7.1,0.0,0.0,92.5,52.2,Above National,2024-08-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,
+93003,23/24,Sport,BTEC,Extended Certificate,18,4.88,100.0,100.0,100.0,11.1,38.9,33.3,16.7,0.0,0.0,92.0,45.8,At National,2024-08-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,
+93004,23/24,Information Technology,BTEC,Extended Certificate,15,5.22,100.0,100.0,100.0,20.0,46.7,26.7,6.7,0.0,0.0,92.2,50.5,Above National,2024-08-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,
+93005,24/25,Business,BTEC,Extended Certificate,18,5.18,,,,,,,,,,,91.8,48.5,,2024-11-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,
+93006,24/25,Health and Social Care,BTEC,Extended Certificate,16,5.02,,,,,,,,,,,92.5,52.2,,2024-11-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,
+93007,24/25,Sport,BTEC,Extended Certificate,20,4.92,,,,,,,,,,,92.0,45.8,,2024-11-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,
+93008,24/25,Information Technology,BTEC,Extended Certificate,17,5.28,,,,,,,,,,,92.2,50.5,,2024-11-20,2024-09-01 00:00:00,2024-09-01 00:00:00,2024-09-01 00:00:00,

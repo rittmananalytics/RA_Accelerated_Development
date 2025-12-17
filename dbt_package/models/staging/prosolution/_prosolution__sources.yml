@@ -1,0 +1,122 @@
+version: 2
+
+sources:
+  - name: raw_prosolution
+    description: Raw data from ProSolution MIS system
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+    schema: raw_prosolution
+    loader: fivetran
+    loaded_at_field: _sdc_extracted_at
+
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+
+    tables:
+      - name: offering
+        description: Course/qualification offerings by academic year
+        identifier: offering
+        columns:
+          - name: offering_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: course_header_id
+            description: FK to course_header
+          - name: offering_type_id
+            description: FK to offering_type
+          - name: academic_year_id
+            description: Academic year identifier
+          - name: code
+            description: Offering code
+          - name: name
+            description: Offering name
+          - name: qual_id
+            description: Qualification identifier
+          - name: study_year
+            description: Current year of study
+          - name: duration
+            description: Total duration in years
+
+      - name: enrolment
+        description: Student enrolments on offerings with grades
+        identifier: enrolment
+        columns:
+          - name: enrolment_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: offering_id
+            description: FK to offering
+            tests:
+              - not_null
+          - name: student_detail_id
+            description: FK to student_detail
+            tests:
+              - not_null
+          - name: completion_status_id
+            description: FK to completion_status
+          - name: grade
+            description: Achieved grade
+
+      - name: student_detail
+        description: Student demographic details by academic year
+        identifier: student_detail
+        columns:
+          - name: student_detail_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: student_id
+            description: FK to student master
+            tests:
+              - not_null
+          - name: academic_year_id
+            description: Academic year
+          - name: sex
+            description: Gender code (M/F)
+
+      - name: student
+        description: Student master record
+        identifier: student
+        columns:
+          - name: student_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+
+      - name: course_header
+        description: Course/programme master data
+        identifier: course_header
+        columns:
+          - name: course_header_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: code
+            description: Course code
+
+      - name: offering_type
+        description: Offering type reference data
+        identifier: offering_type
+        columns:
+          - name: offering_type_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+
+      - name: completion_status
+        description: Completion status reference data
+        identifier: completion_status
+        columns:
+          - name: completion_status_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null

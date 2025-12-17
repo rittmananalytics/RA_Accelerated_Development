@@ -1,0 +1,154 @@
+version: 2
+
+models:
+  - name: dim_academic_year
+    description: >
+      Academic year dimension supporting 6-year historical analysis.
+      Grain: One row per academic year.
+    columns:
+      - name: academic_year_key
+        description: Surrogate key for academic year
+        tests:
+          - unique
+          - not_null
+      - name: academic_year_id
+        description: Natural key (e.g., '23/24')
+        tests:
+          - unique
+          - not_null
+      - name: is_current_year
+        description: Flag indicating current academic year
+
+  - name: dim_offering_type
+    description: >
+      Offering type dimension for qualification categorization.
+      Grain: One row per offering type.
+    columns:
+      - name: offering_type_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: offering_type_id
+        description: Natural key
+        tests:
+          - unique
+          - not_null
+      - name: grading_scale
+        description: "Grading scale used (A*-E or D*-P)"
+
+  - name: dim_course_header
+    description: >
+      Course header dimension for programme-level analysis.
+      Grain: One row per course header.
+    columns:
+      - name: course_header_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: course_header_id
+        description: Natural key
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_offering
+    description: >
+      Offering dimension linking courses to specific academic years.
+      Includes external system mappings for benchmarking.
+      Grain: One row per offering.
+    columns:
+      - name: offering_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: offering_id
+        description: Natural key
+        tests:
+          - unique
+          - not_null
+      - name: alps_subject_name
+        description: ALPS subject name for benchmarking joins
+      - name: six_dimensions_subject_name
+        description: Six Dimensions subject name for benchmarking joins
+
+  - name: dim_student
+    description: >
+      Student dimension with SCD Type 2 history tracking.
+      Grain: One row per student per version.
+    columns:
+      - name: student_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: student_id
+        description: Natural key
+        tests:
+          - not_null
+      - name: is_current
+        description: Flag indicating current version
+
+  - name: dim_student_detail
+    description: >
+      Student demographic details dimension for equity and diversity analysis.
+      Grain: One row per student per academic year.
+    columns:
+      - name: student_detail_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: student_detail_id
+        description: Natural key
+        tests:
+          - not_null
+      - name: is_disadvantaged
+        description: Economically disadvantaged flag (JEDI)
+      - name: is_sen
+        description: Special Educational Needs flag
+      - name: is_pupil_premium
+        description: Pupil Premium eligible flag
+
+  - name: dim_prior_attainment
+    description: >
+      Prior attainment dimension for ALPS-style value-added analysis.
+      Grain: One row per student.
+    columns:
+      - name: prior_attainment_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: student_id
+        description: Natural key
+        tests:
+          - unique
+          - not_null
+      - name: prior_attainment_band
+        description: "Prior attainment band: Low, Mid, High, N/A"
+        tests:
+          - accepted_values:
+              values: ['Low', 'Mid', 'High', 'N/A']
+
+  - name: dim_grade
+    description: >
+      Grade dimension supporting multiple grading scales.
+      Grain: One row per grade per grading scale.
+    columns:
+      - name: grade_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: grade
+        description: Grade value
+        tests:
+          - not_null
+      - name: grading_scale
+        description: "Grading scale: A-Level, BTEC Single, BTEC Double"
+        tests:
+          - accepted_values:
+              values: ['A-Level', 'BTEC Single', 'BTEC Double']

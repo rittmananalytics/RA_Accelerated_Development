@@ -1,0 +1,162 @@
+version: 2
+
+models:
+  - name: fct_enrolment
+    description: >
+      Student enrolment fact table at student-offering grain.
+      Primary fact table for internal student performance analysis.
+      Answers: headline outcomes, grade profiles, attainment gaps, resit tracking.
+    columns:
+      - name: enrolment_key
+        description: Surrogate key for enrolment fact
+        tests:
+          - unique
+          - not_null
+      - name: academic_year_key
+        description: FK to dim_academic_year
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_academic_year')
+              field: academic_year_key
+      - name: offering_key
+        description: FK to dim_offering
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_offering')
+              field: offering_key
+      - name: student_key
+        description: FK to dim_student
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_student')
+              field: student_key
+      - name: grade
+        description: Achieved grade
+      - name: grade_points
+        description: Calculated grade points
+      - name: is_high_grade
+        description: "1 if high grade, 0 otherwise"
+      - name: is_pass
+        description: "1 if pass grade, 0 otherwise"
+      - name: enrolment_count
+        description: Always 1, for counting enrolments
+
+  - name: fct_alps_subject_performance
+    description: >
+      ALPS subject-level benchmarking fact table.
+      Grain: One row per subject per academic year.
+      Answers: Are we hitting ALPS benchmarks? Which subjects over/under perform?
+    columns:
+      - name: alps_subject_performance_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: academic_year_key
+        description: FK to dim_academic_year
+        tests:
+          - not_null
+      - name: alps_subject_name
+        description: Subject name from ALPS report
+        tests:
+          - not_null
+      - name: subject_mapping_status
+        description: "Mapping status: Matched, Unmapped"
+      - name: alps_band
+        description: ALPS band (1-9, 1=best)
+      - name: high_grade_pct
+        description: "High grade percentage (A*-B or D*-M)"
+      - name: pass_rate_pct
+        description: Pass rate percentage
+
+  - name: fct_college_performance
+    description: >
+      College-level performance metrics from Six Dimensions.
+      Grain: One row per report type per academic year.
+      Answers: Institutional value-added, national percentile ranking.
+    columns:
+      - name: college_performance_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: academic_year_key
+        description: FK to dim_academic_year
+        tests:
+          - not_null
+      - name: report_type
+        description: "Report type: VA, Sixth Sense"
+        tests:
+          - accepted_values:
+              values: ['VA', 'Sixth Sense']
+      - name: va_score
+        description: Value-added score
+      - name: va_band
+        description: VA band classification
+      - name: national_percentile_rank
+        description: National percentile ranking
+
+  - name: fct_subject_benchmark
+    description: >
+      Subject-level benchmarking from Six Dimensions reports.
+      Grain: One row per subject per academic year.
+      Answers: Subject performance trajectory, VA by subject.
+    columns:
+      - name: subject_benchmark_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: academic_year_key
+        description: FK to dim_academic_year
+        tests:
+          - not_null
+      - name: six_dimensions_subject_name
+        description: Subject name from Six Dimensions
+        tests:
+          - not_null
+      - name: performance_trajectory
+        description: "Trajectory: Improving, Stable, Declining"
+        tests:
+          - accepted_values:
+              values: ['Improving', 'Stable', 'Declining']
+      - name: va_score
+        description: Subject VA score
+      - name: pass_rate_vs_national_pct
+        description: Pass rate difference from national
+
+  - name: fct_equity_gap
+    description: >
+      Demographic equity gap analysis from JEDI reports.
+      Grain: One row per demographic category/value per academic year.
+      Answers: Attainment gaps by gender, disadvantage, ethnicity, SEND.
+    columns:
+      - name: equity_gap_key
+        description: Surrogate key
+        tests:
+          - unique
+          - not_null
+      - name: academic_year_key
+        description: FK to dim_academic_year
+        tests:
+          - not_null
+      - name: demographic_category
+        description: "Category: Gender, Disadvantage, Ethnicity, SEND"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Gender', 'Disadvantage', 'Ethnicity', 'SEND']
+      - name: demographic_value
+        description: Specific value within category
+        tests:
+          - not_null
+      - name: pass_rate_gap_pct
+        description: Gap vs overall cohort (percentage points)
+      - name: gap_trend
+        description: "Gap trend: Narrowing, Stable, Widening"
+        tests:
+          - accepted_values:
+              values: ['Narrowing', 'Stable', 'Widening']

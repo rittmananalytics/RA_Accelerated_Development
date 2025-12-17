@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: int_student_demographics_joined
+    description: >
+      Joins student detail with extended demographic data and prior attainment.
+      Creates a single view of all student demographics for equity analysis.
+    columns:
+      - name: student_detail_id
+        description: Primary key from ProSolution StudentDetail
+        tests:
+          - unique
+          - not_null
+      - name: student_id
+        description: Student master ID
+        tests:
+          - not_null
+      - name: is_disadvantaged
+        description: Economically disadvantaged flag (ED)
+      - name: is_sen
+        description: Special Educational Needs flag
+      - name: prior_attainment_band
+        description: "Prior attainment band: Low, Mid, High, N/A"
+        tests:
+          - accepted_values:
+              values: ['Low', 'Mid', 'High', 'N/A']
+
+  - name: int_enrolment_with_context
+    description: >
+      Enriches enrolment data with offering, student demographics, and grade metrics.
+      This is the main integration model that feeds the enrolment fact table.
+      Filters to final year enrolments only where results are awarded.
+    columns:
+      - name: enrolment_id
+        description: Primary key from ProSolution Enrolment
+        tests:
+          - unique
+          - not_null
+      - name: offering_id
+        tests:
+          - not_null
+      - name: student_detail_id
+        tests:
+          - not_null
+      - name: grade
+        description: Achieved grade (A*, A, B, C, D, E, U for A-Level; D*, D, M, P for BTEC)
+      - name: grade_points
+        description: Calculated grade points based on qualification type
+      - name: is_high_grade
+        description: "1 if high grade (A*-B or D*-M), 0 otherwise"
+      - name: is_pass
+        description: "1 if pass grade, 0 otherwise"
+
+  - name: int_alps_performance_unioned
+    description: >
+      Unions A-Level and BTEC ALPS performance data into a single model
+      with standardized column names for subject-level benchmarking.
+    columns:
+      - name: academic_year_id
+        tests:
+          - not_null
+      - name: alps_subject_name
+        tests:
+          - not_null
+      - name: qualification_type
+        tests:
+          - accepted_values:
+              values: ['A-Level', 'BTEC']
+
+  - name: int_six_dimensions_college_unioned
+    description: >
+      Unions college-level performance data from VA and Sixth Sense reports.
+      Provides overall institutional benchmarking metrics.
+    columns:
+      - name: academic_year_id
+        tests:
+          - not_null
+      - name: report_type
+        tests:
+          - accepted_values:
+              values: ['VA', 'Sixth Sense']
+
+  - name: int_six_dimensions_subject_unioned
+    description: >
+      Unions subject-level performance data from VA, Sixth Sense, and Vocational reports.
+      Provides subject-level benchmarking for trend analysis.
+    columns:
+      - name: academic_year_id
+        tests:
+          - not_null
+      - name: six_dimensions_subject_name
+        tests:
+          - not_null

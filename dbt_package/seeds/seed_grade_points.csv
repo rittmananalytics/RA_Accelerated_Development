@@ -1,0 +1,20 @@
+grade,qualification_type,ucas_points,grade_points,grade_sort_order,is_pass,is_high_grade
+A*,A-Level,56,60,1,true,true
+A,A-Level,48,50,2,true,true
+B,A-Level,40,40,3,true,true
+C,A-Level,32,30,4,true,false
+D,A-Level,24,20,5,true,false
+E,A-Level,16,10,6,true,false
+U,A-Level,0,0,7,false,false
+X,A-Level,0,0,8,false,false
+D*,BTEC Single,56,60,1,true,true
+D,BTEC Single,48,50,2,true,true
+M,BTEC Single,32,40,3,true,true
+P,BTEC Single,16,30,4,true,false
+D*D*,BTEC Double,112,120,1,true,true
+D*D,BTEC Double,104,110,2,true,true
+DD,BTEC Double,96,100,3,true,true
+DM,BTEC Double,80,80,4,true,true
+MM,BTEC Double,64,60,5,true,true
+MP,BTEC Double,48,50,6,true,false
+PP,BTEC Double,32,40,7,true,false

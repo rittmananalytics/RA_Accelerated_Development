@@ -1,0 +1,221 @@
+name: 'barton_peveril_analytics'
+version: '1.0.0'
+config-version: 2
+
+profile: 'barton_peveril'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  # Prior attainment band thresholds
+  prior_attainment_low_threshold: 4.77
+  prior_attainment_high_threshold: 6.09
+
+  # Academic years to process (6 years of history)
+  academic_years: ['19/20', '20/21', '21/22', '22/23', '23/24', '24/25']
+  current_academic_year: '24/25'
+
+  # Grade point mappings
+  a_level_grade_points:
+    'A*': 60
+    'A': 50
+    'B': 40
+    'C': 30
+    'D': 20
+    'E': 10
+    'U': 0
+
+models:
+  barton_peveril_analytics:
+    +materialized: view
+    +on_schema_change: "append_new_columns"
+
+    staging:
+      +materialized: view
+      +schema: staging
+      prosolution:
+        +tags: ['prosolution', 'staging']
+      mis_applications:
+        +tags: ['mis_applications', 'staging']
+      focus:
+        +tags: ['focus', 'staging']
+      alps:
+        +tags: ['alps', 'staging', 'external_benchmark']
+      six_dimensions:
+        +tags: ['six_dimensions', 'staging', 'external_benchmark']
+
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+      +tags: ['intermediate']
+
+    marts:
+      +materialized: table
+      +schema: marts
+      dimensions:
+        +tags: ['dimensions', 'marts']
+      facts:
+        +tags: ['facts', 'marts']
+
+seeds:
+  barton_peveril_analytics:
+    +schema: seeds
+    seed_grade_points:
+      +column_types:
+        grade: varchar(10)
+        qualification_type: varchar(50)
+        ucas_points: int64
+        grade_points: int64
+        grade_sort_order: int64
+    seed_subject_crosswalk:
+      +column_types:
+        course_header_id: int64
+        match_confidence_pct: numeric
+
+    # Raw source data seeds for testing
+    raw_prosolution:
+      +schema: raw_prosolution
+      +tags: ['raw', 'prosolution']
+      offering_type:
+        +column_types:
+          offering_type_id: int64
+          qualification_level: varchar(20)
+      completion_status:
+        +column_types:
+          completion_status_id: int64
+      course_header:
+        +column_types:
+          course_header_id: int64
+      offering:
+        +column_types:
+          offering_id: int64
+          course_header_id: int64
+          offering_type_id: int64
+          study_year: int64
+          duration: int64
+          planned_hours: int64
+      student:
+        +column_types:
+          student_id: int64
+          uln: int64
+      student_detail:
+        +column_types:
+          student_detail_id: int64
+          student_id: int64
+          imd_decile: int64
+          polar4_quintile: int64
+      enrolment:
+        +column_types:
+          enrolment_id: int64
+          student_id: int64
+          offering_id: int64
+          completion_status_id: int64
+          attendance_pct: numeric
+
+    raw_mis_applications:
+      +schema: raw_mis_applications
+      +tags: ['raw', 'mis_applications']
+      student_extended_data:
+        +column_types:
+          student_extended_id: int64
+          student_id: int64
+          imd_decile: int64
+          polar4_quintile: int64
+
+    raw_focus:
+      +schema: raw_focus
+      +tags: ['raw', 'focus']
+      average_gcse:
+        +column_types:
+          average_gcse_id: int64
+          student_id: int64
+          average_gcse_score: numeric
+          gcse_english_grade: int64
+          gcse_maths_grade: int64
+          gcse_count: int64
+
+    raw_alps:
+      +schema: raw_alps
+      +tags: ['raw', 'alps', 'external_benchmark']
+      provider_report_a_level:
+        +column_types:
+          alps_report_id: int64
+          student_count: int64
+          average_gcse_on_entry: numeric
+          alps_score: numeric
+          value_added_score: numeric
+          pass_rate_pct: numeric
+          high_grades_pct: numeric
+      provider_report_btec:
+        +column_types:
+          alps_btec_report_id: int64
+          student_count: int64
+          average_gcse_on_entry: numeric
+          alps_score: numeric
+          value_added_score: numeric
+          pass_rate_pct: numeric
+          high_grades_pct: numeric
+
+    raw_six_dimensions:
+      +schema: raw_six_dimensions
+      +tags: ['raw', 'six_dimensions', 'external_benchmark']
+      jedi_report:
+        +column_types:
+          jedi_report_id: int64
+          student_count: int64
+          comparison_count: int64
+          student_avg_grade_points: numeric
+          comparison_avg_grade_points: numeric
+          gap_grade_points: numeric
+      va_report:
+        +column_types:
+          va_report_id: int64
+          student_count: int64
+          average_gcse_on_entry: numeric
+          value_added_score: numeric
+          residual_score: numeric
+          confidence_interval_lower: numeric
+          confidence_interval_upper: numeric
+      sixth_sense_report:
+        +column_types:
+          sixth_sense_id: int64
+          student_count: int64
+          completion_rate_pct: numeric
+          retention_rate_pct: numeric
+          achievement_rate_pct: numeric
+          pass_rate_pct: numeric
+          high_grades_pct: numeric
+          attendance_rate_pct: numeric
+          national_completion_pct: numeric
+          national_achievement_pct: numeric
+          national_pass_pct: numeric
+      vocational_report:
+        +column_types:
+          vocational_report_id: int64
+          student_count: int64
+          average_gcse_on_entry: numeric
+          completion_rate_pct: numeric
+          achievement_rate_pct: numeric
+          pass_rate_pct: numeric
+          distinction_star_pct: numeric
+          distinction_pct: numeric
+          merit_pct: numeric
+          pass_pct: numeric
+          near_pass_pct: numeric
+          fail_pct: numeric
+          national_achievement_pct: numeric
+          national_distinction_plus_pct: numeric
+
+tests:
+  +severity: warn
+  +tags: ['data_quality']

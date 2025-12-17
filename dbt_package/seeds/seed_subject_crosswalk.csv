@@ -1,0 +1,16 @@
+course_header_id,offering_code,prosolution_subject_name,alps_subject_name,alps_qualification_type,six_dimensions_subject_name,dfe_qualification_code,dfe_subject_name,mapping_method,match_confidence_pct,is_verified,verified_by,verified_date
+1,BIOL-A2,Biology,A - Biology,A-Level,Biology,1010,Biology,Exact,100,true,SME,2024-01-01
+2,CHEM-A2,Chemistry,A - Chemistry,A-Level,Chemistry,1020,Chemistry,Exact,100,true,SME,2024-01-01
+3,PHYS-A2,Physics,A - Physics,A-Level,Physics,1030,Physics,Exact,100,true,SME,2024-01-01
+4,MATH-A2,Mathematics,A - Mathematics,A-Level,Mathematics,2210,Mathematics,Exact,100,true,SME,2024-01-01
+5,FMAT-A2,Further Mathematics,A - Further Mathematics,A-Level,Further Maths,2330,Further Mathematics,Fuzzy,90,true,SME,2024-01-01
+6,ENGL-A2,English Literature,A - English Literature,A-Level,English Literature,5010,English Literature,Exact,100,true,SME,2024-01-01
+7,HIST-A2,History,A - History,A-Level,History,4010,History,Exact,100,true,SME,2024-01-01
+8,GEOG-A2,Geography,A - Geography,A-Level,Geography,3910,Geography,Exact,100,true,SME,2024-01-01
+9,PSYC-A2,Psychology,A - Psychology,A-Level,Psychology,1180,Psychology,Exact,100,true,SME,2024-01-01
+10,ECON-A2,Economics,A - Economics,A-Level,Economics,4130,Economics,Exact,100,true,SME,2024-01-01
+11,BUSN-BTEC,Business,BTEC - Business,BTEC,Applied Business,1510,Business Studies,Fuzzy,85,true,SME,2024-01-01
+12,HLTH-BTEC,Health and Social Care,BTEC - Health & Social Care,BTEC,Health & Social Care,1620,Health and Social Care,Exact,100,true,SME,2024-01-01
+13,SPRT-BTEC,Sport,BTEC - Sport,BTEC,Sport,3660,Physical Education,Fuzzy,80,true,SME,2024-01-01
+14,IT-BTEC,Information Technology,BTEC - IT,BTEC,Applied IT,2620,Information Technology,Exact,100,true,SME,2024-01-01
+15,ART-A2,Art and Design,A - Art and Design,A-Level,Art & Design,6010,Art and Design,Exact,100,true,SME,2024-01-01

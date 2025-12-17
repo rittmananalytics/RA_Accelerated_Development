@@ -1,0 +1,24 @@
+# Template for profiles.yml - Copy to ~/.dbt/profiles.yml and update values
+barton_peveril:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+      dataset: dev
+      threads: 4
+      timeout_seconds: 300
+      location: EU
+      priority: interactive
+
+    prod:
+      type: bigquery
+      method: service-account
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+      dataset: prod
+      threads: 8
+      timeout_seconds: 300
+      location: EU
+      priority: interactive
+      keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE') }}"

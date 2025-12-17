@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: raw_focus
+    description: Prior attainment data from Focus system
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+    schema: raw_focus
+    loader: fivetran
+    loaded_at_field: _sdc_extracted_at
+
+    freshness:
+      warn_after: {count: 168, period: hour}  # Weekly refresh expected
+      error_after: {count: 336, period: hour}
+
+    tables:
+      - name: average_gcse
+        description: Student prior attainment (GCSE scores)
+        identifier: average_gcse
+        columns:
+          - name: student_id
+            description: FK to student
+            tests:
+              - unique
+              - not_null
+          - name: average_gcse
+            description: Average GCSE point score

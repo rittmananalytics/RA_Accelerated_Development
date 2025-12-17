@@ -1,0 +1,35 @@
+version: 2
+
+sources:
+  - name: raw_alps
+    description: ALPS provider benchmarking data parsed from PDF reports
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+    schema: raw_alps
+    loader: document_ai
+
+    tables:
+      - name: provider_report_a_level
+        description: ALPS A-Level subject benchmarking data
+        identifier: provider_report_a_level
+        columns:
+          - name: report_year
+            description: Academic year of report
+            tests:
+              - not_null
+          - name: subject_name
+            description: ALPS subject name
+            tests:
+              - not_null
+
+      - name: provider_report_btec
+        description: ALPS BTEC subject benchmarking data
+        identifier: provider_report_btec
+        columns:
+          - name: report_year
+            description: Academic year of report
+            tests:
+              - not_null
+          - name: subject_name
+            description: ALPS subject name
+            tests:
+              - not_null

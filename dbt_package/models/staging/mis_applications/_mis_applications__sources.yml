@@ -1,0 +1,30 @@
+version: 2
+
+sources:
+  - name: raw_mis_applications
+    description: Extended student demographic data from MIS Applications
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+    schema: raw_mis_applications
+    loader: fivetran
+    loaded_at_field: _sdc_extracted_at
+
+    freshness:
+      warn_after: {count: 24, period: hour}
+      error_after: {count: 48, period: hour}
+
+    tables:
+      - name: student_extended_data
+        description: Extended student demographic flags for equity analysis
+        identifier: student_extended_data
+        columns:
+          - name: student_detail_id
+            description: FK to student_detail
+            tests:
+              - unique
+              - not_null
+          - name: ed
+            description: Economically Disadvantaged flag (1/0)
+          - name: sen
+            description: SEN + Additional Adjustments flag (1/0)
+          - name: pp_or_fcm
+            description: Pupil Premium or Free School Meals flag (1/0)
