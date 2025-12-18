@@ -3,6 +3,9 @@ connection: "ra_dw_prod"
 # Include all view files
 include: "/views/*.view.lkml"
 
+# Include all dashboard files
+include: "/dashboards/*.dashboard.lkml"
+
 # =====================================================================
 # DATA GROUPS - For caching and scheduling
 # =====================================================================
